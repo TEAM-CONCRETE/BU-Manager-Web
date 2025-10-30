@@ -14,17 +14,16 @@ jobs:
       - name: Generate markdown body (Python-safe newline fix)
         run: |
           python3 <<'PYCODE'
-          import base64, os
+          import os
 
-          # 가져오기
-          desc = os.environ.get("DESC", "")
-          todo = os.environ.get("TODO", "")
+          desc = os.getenv("DESC", "")
+          todo = os.getenv("TODO", "")
 
-          # 이스케이프된 줄바꿈을 실제 개행으로 변환
+          # Jira에서 넘어온 이스케이프 개행을 실제 줄바꿈으로 변환
           desc = desc.replace("\\\\n", "\n").replace("\\n", "\n")
           todo = todo.replace("\\\\n", "\n").replace("\\n", "\n")
 
-          # Markdown 체크박스 붙이기
+          # 체크박스 마크다운 변환
           todo_lines = [f"- [ ] {line.strip()}" for line in todo.splitlines() if line.strip()]
           todo_md = "\n".join(todo_lines)
 
@@ -39,10 +38,10 @@ jobs:
 ---
 
 ### 👤 담당자
-{os.environ.get('REPORTER', '')}
+{os.getenv('REPORTER', '')}
 
 ### 🔗 Jira Link
-[**{os.environ.get('KEY', '')}**]({os.environ.get('URL', '')})
+[**{os.getenv('KEY', '')}**]({os.getenv('URL', '')})
 """
           with open("issue-body.md", "w", encoding="utf-8") as f:
               f.write(md)
