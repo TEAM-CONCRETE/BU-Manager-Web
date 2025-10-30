@@ -1,0 +1,36 @@
+name: Create Issue from Jira
+on:
+  repository_dispatch:
+    types: [jira-issue]
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create issue from Jira payload
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "[${{ github.event.client_payload.key }}] ${{ github.event.client_payload.summary }}"
+          content-filepath: ./issue-body.md
+          labels: |
+            jira
+            ${{ github.event.client_payload.type }}
+      - name: Generate issue body
+        run: |
+          cat > issue-body.md <<'EOF'
+          ## 🚀 Description
+          > ${{ github.event.client_payload.description }}
+
+          ---
+
+          ### ✅ To-Do List
+          - [ ] ${{ github.event.client_payload.todo }}
+
+          ---
+
+          ### 👤 담당자
+          ${{ github.event.client_payload.reporter }}
+
+          ### 🔗 Jira Link
+          [**${{ github.event.client_payload.key }}**](${{ github.event.client_payload.url }})
+          EOF
