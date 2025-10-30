@@ -11,47 +11,37 @@ jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate markdown body (Python-safe newline fix)
+      - name: Generate issue body (safe bash version)
         run: |
-          python3 - <<'PYCODE'
-          import os
+          # Jira에서 넘어온 payload 받기
+          DESC="${{ github.event.client_payload.description }}"
+          TODO="${{ github.event.client_payload.todo }}"
+          REPORTER="${{ github.event.client_payload.reporter }}"
+          KEY="${{ github.event.client_payload.key }}"
+          URL="${{ github.event.client_payload.url }}"
 
-          desc = os.getenv("DESC", "")
-          todo = os.getenv("TODO", "")
+          # \n, \\n → 실제 줄바꿈으로 치환
+          DESC=$(printf "%b" "$DESC")
+          TODO=$(printf "%b" "$TODO")
 
-          # Jira에서 넘어온 이스케이프 개행을 실제 줄바꿈으로 변환
-          desc = desc.replace("\\\\n", "\n").replace("\\n", "\n")
-          todo = todo.replace("\\\\n", "\n").replace("\\n", "\n")
-
-          # 체크박스 마크다운 변환
-          todo_lines = [f"- [ ] {line.strip()}" for line in todo.splitlines() if line.strip()]
-          todo_md = "\n".join(todo_lines)
-
-          md = f"""## 🚀 Description
-> {desc}
-
----
-
-### ✅ To-Do List
-{todo_md}
-
----
-
-### 👤 담당자
-{os.getenv('REPORTER', '')}
-
-### 🔗 Jira Link
-[**{os.getenv('KEY', '')}**]({os.getenv('URL', '')})
-"""
-          with open("issue-body.md", "w", encoding="utf-8") as f:
-              f.write(md)
-          PYCODE
-        env:
-          DESC: ${{ github.event.client_payload.description }}
-          TODO: ${{ github.event.client_payload.todo }}
-          REPORTER: ${{ github.event.client_payload.reporter }}
-          KEY: ${{ github.event.client_payload.key }}
-          URL: ${{ github.event.client_payload.url }}
+          # Markdown 파일 생성
+          {
+            echo "## 🚀 Description"
+            echo "> ${DESC}"
+            echo ""
+            echo "---"
+            echo "### ✅ To-Do List"
+            echo "${TODO}" | while IFS= read -r line; do
+              [ -n "$line" ] && echo "- [ ] $line"
+            done
+            echo ""
+            echo "---"
+            echo "### 👤 담당자"
+            echo "$REPORTER"
+            echo ""
+            echo "### 🔗 Jira Link"
+            echo "[**$KEY**]($URL)"
+          } > issue-body.md
 
       - name: Create issue from generated file
         uses: peter-evans/create-issue-from-file@v4
