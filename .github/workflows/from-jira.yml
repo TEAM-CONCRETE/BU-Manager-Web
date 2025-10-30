@@ -11,16 +11,22 @@ jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate issue body from Jira payload
+      - name: Convert escaped newlines and create issue body
         run: |
-          cat > issue-body.md <<'EOF'
+          desc="${{ github.event.client_payload.description }}"
+          todo="${{ github.event.client_payload.todo }}"
+
+          desc=$(echo "$desc" | sed 's/\\\\n/\n/g')
+          todo=$(echo "$todo" | sed 's/\\\\n/\n/g')
+
+          cat > issue-body.md <<EOF
           ## 🚀 Description
-          > ${{ github.event.client_payload.description }}
+          > $desc
 
           ---
 
           ### ✅ To-Do List
-          - [ ] ${{ github.event.client_payload.todo }}
+          $(echo "$todo" | sed 's/^/- [ ] /')
 
           ---
 
