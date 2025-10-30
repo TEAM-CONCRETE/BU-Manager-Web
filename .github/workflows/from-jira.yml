@@ -3,19 +3,15 @@ on:
   repository_dispatch:
     types: [jira-issue]
 
+permissions:
+  issues: write
+  contents: read
+
 jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - name: Create issue from Jira payload
-        uses: peter-evans/create-issue-from-file@v4
-        with:
-          title: "[${{ github.event.client_payload.key }}] ${{ github.event.client_payload.summary }}"
-          content-filepath: ./issue-body.md
-          labels: |
-            jira
-            ${{ github.event.client_payload.type }}
-      - name: Generate issue body
+      - name: Generate issue body from Jira payload
         run: |
           cat > issue-body.md <<'EOF'
           ## 🚀 Description
@@ -34,3 +30,12 @@ jobs:
           ### 🔗 Jira Link
           [**${{ github.event.client_payload.key }}**](${{ github.event.client_payload.url }})
           EOF
+
+      - name: Create issue from generated file
+        uses: peter-evans/create-issue-from-file@v4
+        with:
+          title: "[${{ github.event.client_payload.key }}] ${{ github.event.client_payload.summary }}"
+          content-filepath: ./issue-body.md
+          labels: |
+            jira
+            ${{ github.event.client_payload.type }}
