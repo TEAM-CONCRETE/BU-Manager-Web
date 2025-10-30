@@ -11,34 +11,48 @@ jobs:
   create:
     runs-on: ubuntu-latest
     steps:
-      - name: Convert escaped newlines and create issue body
+      - name: Generate markdown body (Python-safe newline fix)
         run: |
-          # 1️⃣ Jira에서 전달된 값들을 환경변수로 받기
-          desc="${{ github.event.client_payload.description }}"
-          todo="${{ github.event.client_payload.todo }}"
+          python3 <<'PYCODE'
+          import base64, os
 
-          # 2️⃣ 이스케이프된 \n 및 \\n을 실제 줄바꿈으로 변환
-          desc=$(echo "$desc" | sed -E 's/\\\\n/\n/g' | sed -E 's/\\n/\n/g')
-          todo=$(echo "$todo" | sed -E 's/\\\\n/\n/g' | sed -E 's/\\n/\n/g')
+          # 가져오기
+          desc = os.environ.get("DESC", "")
+          todo = os.environ.get("TODO", "")
 
-          # 3️⃣ Markdown 형식의 이슈 본문 작성
-          cat > issue-body.md <<EOF
-          ## 🚀 Description
-          > $desc
+          # 이스케이프된 줄바꿈을 실제 개행으로 변환
+          desc = desc.replace("\\\\n", "\n").replace("\\n", "\n")
+          todo = todo.replace("\\\\n", "\n").replace("\\n", "\n")
 
-          ---
+          # Markdown 체크박스 붙이기
+          todo_lines = [f"- [ ] {line.strip()}" for line in todo.splitlines() if line.strip()]
+          todo_md = "\n".join(todo_lines)
 
-          ### ✅ To-Do List
-          $(echo "$todo" | sed 's/^/- [ ] /')
+          md = f"""## 🚀 Description
+> {desc}
 
-          ---
+---
 
-          ### 👤 담당자
-          ${{ github.event.client_payload.reporter }}
+### ✅ To-Do List
+{todo_md}
 
-          ### 🔗 Jira Link
-          [**${{ github.event.client_payload.key }}**](${{ github.event.client_payload.url }})
-          EOF
+---
+
+### 👤 담당자
+{os.environ.get('REPORTER', '')}
+
+### 🔗 Jira Link
+[**{os.environ.get('KEY', '')}**]({os.environ.get('URL', '')})
+"""
+          with open("issue-body.md", "w", encoding="utf-8") as f:
+              f.write(md)
+          PYCODE
+        env:
+          DESC: ${{ github.event.client_payload.description }}
+          TODO: ${{ github.event.client_payload.todo }}
+          REPORTER: ${{ github.event.client_payload.reporter }}
+          KEY: ${{ github.event.client_payload.key }}
+          URL: ${{ github.event.client_payload.url }}
 
       - name: Create issue from generated file
         uses: peter-evans/create-issue-from-file@v4
