@@ -13,12 +13,15 @@ jobs:
     steps:
       - name: Convert escaped newlines and create issue body
         run: |
+          # 1️⃣ Jira에서 전달된 값들을 환경변수로 받기
           desc="${{ github.event.client_payload.description }}"
           todo="${{ github.event.client_payload.todo }}"
 
-          desc=$(echo "$desc" | sed 's/\\\\n/\n/g')
-          todo=$(echo "$todo" | sed 's/\\\\n/\n/g')
+          # 2️⃣ 이스케이프된 \n 및 \\n을 실제 줄바꿈으로 변환
+          desc=$(echo "$desc" | sed -E 's/\\\\n/\n/g' | sed -E 's/\\n/\n/g')
+          todo=$(echo "$todo" | sed -E 's/\\\\n/\n/g' | sed -E 's/\\n/\n/g')
 
+          # 3️⃣ Markdown 형식의 이슈 본문 작성
           cat > issue-body.md <<EOF
           ## 🚀 Description
           > $desc
