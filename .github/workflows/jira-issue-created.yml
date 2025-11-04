@@ -73,7 +73,6 @@ jobs:
               .replaceAll('{{description}}', description)
               .replaceAll('{{initiator}}', initiator)
               .replaceAll('{{detail}}', detail)
-              .replaceAll('{{issue.duedate}}', duedate)
               .replaceAll('{{reference}}', reference)
               .replaceAll('{{checklist}}', checklist || '');
 
