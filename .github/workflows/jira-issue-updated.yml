@@ -65,6 +65,30 @@ jobs:
               return (data.renderedFields && data.renderedFields.description) ? data.renderedFields.description : '';
             }
 
+            // ✅ 커스텀 필드(구현대상/참고자료) 보강
+            async function fetchJiraCustomFields(issueKey, fieldIds = []) {
+              const base = (process.env.JIRA_BASE_URL || '').replace(/\/+$/,'');
+              if (!base || !issueKey || !fieldIds.length) return {};
+              const q = encodeURIComponent(fieldIds.join(','));
+              const url = `${base}/rest/api/3/issue/${encodeURIComponent(issueKey)}?fields=${q}&expand=renderedFields`;
+              const resp = await fetch(url, {
+                headers: {
+                  'Accept': 'application/json',
+                  'Authorization': 'Basic ' + Buffer.from(`${process.env.JIRA_USER_EMAIL}:${process.env.JIRA_API_TOKEN}`).toString('base64')
+                }
+              });
+              if (!resp.ok) { core.info(`Jira GET fields failed: ${resp.status} ${await resp.text()}`); return {}; }
+              const data = await resp.json();
+              const rf = data.renderedFields || {};
+              const f  = data.fields || {};
+              const out = {};
+              for (const id of fieldIds) {
+                const v = rf[id] ?? f[id] ?? '';
+                out[id] = (v == null) ? '' : v.toString();
+              }
+              return out;
+            }
+
             // 체크리스트를 깃허브 마크다운 체크박스로 정규화
             function normalizeChecklist(input) {
               const raw = decodeMaybe(input);
@@ -110,18 +134,31 @@ jobs:
             // 4) 값 준비 (+ Jira 보강 및 디코딩)
             const base       = (process.env.JIRA_BASE_URL || '').replace(/\/+$/,'');
             const key        = esc(p.key);
-            const urlLink    = (key && base) ? `${base}/browse/${key}` : ''; // payload url 안 받음
-            const summary    = decodeMaybe(p.summary);
-            let   description= decodeMaybe(p.description);     // 비면 아래 fallback
-            const detail     = decodeMaybe(p.detail);          // customfield_10113
-            const reference  = decodeMaybe(p.reference);       // customfield_10114
-            const initiator  = decodeMaybe(p.initiator);       // 규칙 실행자 or assignee 등
+            const urlLink    = (key && base) ? `${base}/browse/${key}` : '';
+            const summary    = decodeMaybe(p.summary);           // summary는 인코딩 없어도 처리 가능
+            let   description= decodeMaybe(p.description);       // 웹훅값 → 비면 API 보강
+            let   detail     = decodeMaybe(p.detail);            // customfield_10113
+            let   reference  = decodeMaybe(p.reference);         // customfield_10114
+            const initiator  = decodeMaybe(p.initiator);
             const checklistMD= normalizeChecklist(p.checklist);
 
-            // description이 비었으면 Jira API의 rendered HTML로 보강
-            if (!description.trim() && key) {
+            // description 보강 (rendered HTML)
+            if (!has(description) && has(key)) {
               const html = await fetchJiraDescriptionHTML(key);
               if (has(html)) description = html;
+            }
+
+            // ✅ detail/reference 보강 (customfield_10113 / 10114)
+            if ((!has(detail) || !has(reference)) && has(key)) {
+              const got = await fetchJiraCustomFields(key, ['customfield_10113','customfield_10114']);
+              if (!has(detail) && has(got['customfield_10113'])) {
+                const v = decodeMaybe(got['customfield_10113']);
+                if (has(v)) detail = v;
+              }
+              if (!has(reference) && has(got['customfield_10114'])) {
+                const v = decodeMaybe(got['customfield_10114']);
+                if (has(v)) reference = v;
+              }
             }
 
             let producedBody = '';
