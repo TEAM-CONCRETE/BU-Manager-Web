@@ -4,6 +4,11 @@ on:
   repository_dispatch:
     types: [jira-issue-updated]
 
+# 같은 Jira 키로 중복 실행 방지
+concurrency:
+  group: jira-${{ github.event.client_payload.key || 'unknown' }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   issues: write
@@ -35,7 +40,7 @@ jobs:
             const nz  = (s, f='') => { const v = esc(s).trim(); return v ? v : f; };
             const has = (s) => !!esc(s).trim();
 
-            // urlEncoded(%)이면 복원 (+ → 공백)
+            // URL 인코딩(%xx) 복원 (+ → 공백)
             const decodeMaybe = (s) => {
               const str = esc(s);
               try {
@@ -74,8 +79,9 @@ jobs:
             }
 
             // 0) 필수값: GH 이슈번호
-            const issue_number = Number(p.issue_number);
+            let issue_number = Number(p.issue_number);
             if (!issue_number) { core.setFailed('Missing issue_number in payload'); return; }
+
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
 
@@ -101,27 +107,21 @@ jobs:
             const hasTemplate = fs.existsSync(templatePath);
             const tpl = hasTemplate ? fs.readFileSync(templatePath, 'utf8') : '';
 
-            // 4) 값 준비 (+ Jira 보강)
-            const key         = esc(p.key);
-            const urlLink     = esc(p.url);
-            const summary     = esc(p.summary);
-            let   description = esc(p.description);     // Automation에서 직접 채워오되…
-            const detail      = esc(p.detail);          // customfield_10113 → detail 로 전송
-            const reference   = esc(p.reference);       // customfield_10114 → reference 로 전송
-            const checklistMD = normalizeChecklist(p.checklist);
+            // 4) 값 준비 (+ Jira 보강 및 디코딩)
+            const base       = (process.env.JIRA_BASE_URL || '').replace(/\/+$/,'');
+            const key        = esc(p.key);
+            const urlLink    = (key && base) ? `${base}/browse/${key}` : ''; // payload url 안 받음
+            const summary    = decodeMaybe(p.summary);
+            let   description= decodeMaybe(p.description);     // 비면 아래 fallback
+            const detail     = decodeMaybe(p.detail);          // customfield_10113
+            const reference  = decodeMaybe(p.reference);       // customfield_10114
+            const initiator  = decodeMaybe(p.initiator);       // 규칙 실행자 or assignee 등
+            const checklistMD= normalizeChecklist(p.checklist);
 
             // description이 비었으면 Jira API의 rendered HTML로 보강
             if (!description.trim() && key) {
               const html = await fetchJiraDescriptionHTML(key);
               if (has(html)) description = html;
-            }
-
-            // 5) 템플릿 바인딩
-            function replaceAllVariants(body, key, value) {
-              const variants = [key, key.replace(/\s/g,''), `{{ ${key.slice(2)}`, `{{${key.slice(2)}`]; // 대충 공백 변형 커버
-              let out = body;
-              for (const v of new Set(variants)) out = out.replaceAll(v, value);
-              return out;
             }
 
             let producedBody = '';
@@ -136,7 +136,8 @@ jobs:
                 .replaceAll('{{description}}', has(description) ? description : '')
                 .replaceAll('{{detail}}', has(detail) ? detail : '')
                 .replaceAll('{{issue.reference}}', reference)
-                .replaceAll('{{reference}}', reference);
+                .replaceAll('{{reference}}', reference)
+                .replaceAll('{{initiator}}', has(initiator) ? initiator : '');
 
               // 체크리스트는 앞뒤 개행을 줘서 안정 렌더
               const checklistBlock = has(checklistMD) ? `\n${checklistMD}\n` : '';
