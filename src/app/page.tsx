@@ -1,3 +1,5 @@
+import AntdPreview from "@/components/antd-preview";
+
 const colors = [
   { name: "Primary", className: "bg-brand-primary text-white" },
   { name: "Secondary", className: "bg-brand-secondary text-white" },
@@ -47,6 +49,9 @@ export default function Home() {
               </span>
             </div>
           ))}
+        </div>
+        <div className="mt-10">
+          <AntdPreview />
         </div>
       </section>
     </div>
