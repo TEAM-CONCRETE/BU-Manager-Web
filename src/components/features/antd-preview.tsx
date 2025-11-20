@@ -1,7 +1,8 @@
 "use client";
 
-import { Button, Table, Tag } from "antd";
+import { Table, Tag } from "antd";
 import type { TableProps } from "antd";
+import { Button } from "@/components/ui/button";
 
 type TaskStatus = "done" | "pending" | "alert";
 
@@ -81,12 +82,10 @@ export default function AntdPreview() {
           </h3>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="default" className="border-border dark:border-dark-border">
+          <Button variant="ghost" size="sm">
             요청 내역
           </Button>
-          <Button type="primary" className="shadow-lg shadow-brand-primary/30">
-            새 업무 추가
-          </Button>
+          <Button className="shadow-lg shadow-brand-primary/30">새 업무 추가</Button>
         </div>
       </div>
       <div className="mt-4 overflow-hidden rounded-xl border border-border dark:border-dark-border">
