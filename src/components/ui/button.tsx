@@ -4,9 +4,9 @@ import { cn } from "@/utils/cn";
 
 const variantClasses = {
   primary:
-    "bg-brand-primary text-white hover:bg-brand-primary-strong focus-visible:outline focus-visible:outline-brand-primary",
+    "bg-brand-primary hover:bg-brand-primary-strong focus-visible:outline focus-visible:outline-brand-primary",
   secondary:
-    "bg-brand-secondary text-white hover:bg-brand-secondary/90 focus-visible:outline focus-visible:outline-brand-secondary",
+    "bg-brand-secondary hover:bg-brand-secondary/90 focus-visible:outline focus-visible:outline-brand-secondary",
   soft: "bg-brand-primary-soft/70 text-brand-primary-strong hover:bg-brand-primary-soft/90 focus-visible:outline focus-visible:outline-brand-primary dark:bg-dark-bg-surface/30 dark:text-dark-text-strong dark:border-dark-border/60",
   ghost:
     "bg-transparent border border-border text-text-strong hover:bg-bg-subtle focus-visible:outline focus-visible:outline-brand-secondary dark:text-dark-text-strong dark:border-dark-border dark:hover:bg-dark-bg-surface/60",
@@ -68,7 +68,15 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         {!contentHidden && leftIcon ? (
           <span className="flex items-center text-inherit">{leftIcon}</span>
         ) : null}
-        <span className={cn("whitespace-nowrap", contentHidden && "opacity-0")}>{children}</span>
+        <span
+          className={cn(
+            "whitespace-nowrap",
+            (variant === "primary" || variant === "secondary") && "text-white",
+            contentHidden && "opacity-0",
+          )}
+        >
+          {children}
+        </span>
         {!contentHidden && rightIcon ? (
           <span className="flex items-center text-inherit">{rightIcon}</span>
         ) : null}
