@@ -1,4 +1,4 @@
-import AntdPreview from "@/components/antd-preview";
+import AntdPreview from "@/components/features/antd-preview";
 
 const colors = [
   { name: "Primary", className: "bg-brand-primary text-white" },
@@ -22,9 +22,7 @@ export default function Home() {
       <section className="mx-auto max-w-5xl rounded-3xl border border-dashed border-border bg-bg-surface p-6 shadow-[0_10px_40px_-20px_rgba(0,0,0,0.3)] dark:border-dark-border dark:bg-dark-bg-surface">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-text-subtle dark:text-dark-text-base">
-              컬러 토큰 스냅샷
-            </p>
+            <p className="text-sm text-text-subtle dark:text-dark-text-base">컬러 토큰 스냅샷</p>
             <h1 className="text-2xl font-semibold text-text-strong dark:text-dark-text-strong">
               Tailwind @theme 적용 상태
             </h1>
@@ -34,8 +32,8 @@ export default function Home() {
           </span>
         </header>
         <p className="mt-4 text-sm leading-6 text-text-base dark:text-dark-text-base">
-          각 카드가 `@theme inline`으로 정의한 토큰을 Tailwind 유틸리티 클래스로
-          소비하는 예시입니다.
+          각 카드가 `@theme inline`으로 정의한 토큰을 Tailwind 유틸리티 클래스로 소비하는
+          예시입니다.
         </p>
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {colors.map((color) => (

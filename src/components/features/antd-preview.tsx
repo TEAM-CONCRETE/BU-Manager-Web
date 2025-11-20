@@ -13,10 +13,7 @@ type TaskRow = {
   deadline: string;
 };
 
-const statusMeta: Record<
-  TaskStatus,
-  { label: string; color: "success" | "warning" | "error" }
-> = {
+const statusMeta: Record<TaskStatus, { label: string; color: "success" | "warning" | "error" }> = {
   done: { label: "완료", color: "success" },
   pending: { label: "진행중", color: "warning" },
   alert: { label: "지연", color: "error" },
@@ -78,9 +75,7 @@ export default function AntdPreview() {
     <div className="rounded-2xl border border-border bg-bg-surface p-6 dark:border-dark-border dark:bg-dark-bg-surface">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm text-text-subtle dark:text-dark-text-base">
-            Ant Design
-          </p>
+          <p className="text-sm text-text-subtle dark:text-dark-text-base">Ant Design</p>
           <h3 className="text-xl font-semibold text-text-strong dark:text-dark-text-strong">
             Table & Actions
           </h3>
@@ -89,10 +84,7 @@ export default function AntdPreview() {
           <Button type="default" className="border-border dark:border-dark-border">
             요청 내역
           </Button>
-          <Button
-            type="primary"
-            className="shadow-lg shadow-brand-primary/30"
-          >
+          <Button type="primary" className="shadow-lg shadow-brand-primary/30">
             새 업무 추가
           </Button>
         </div>
@@ -108,4 +100,3 @@ export default function AntdPreview() {
     </div>
   );
 }
-
