@@ -4,7 +4,7 @@ import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { CheckOutlined, CloseCircleOutlined } from "@ant-design/icons";
 
-import { StatusPill, type StatusPillProps } from "./status-pill";
+import { StatusPill, type StatusPillProps } from "@/components/ui/status-pill/status-pill";
 
 const meta: Meta<StatusPillProps> = {
   title: "Components/UI/StatusPill",

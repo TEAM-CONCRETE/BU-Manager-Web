@@ -4,7 +4,7 @@ import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { PlusOutlined } from "@ant-design/icons";
 
-import { Button, type ButtonProps } from "./button";
+import { Button, type ButtonProps } from "@/components/ui/Button/button";
 
 const meta: Meta<ButtonProps> = {
   title: "Components/UI/Button",

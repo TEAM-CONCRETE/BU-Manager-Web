@@ -2,7 +2,7 @@
 
 import { Table, Tag } from "antd";
 import type { TableProps } from "antd";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button/button";
 
 type TaskStatus = "done" | "pending" | "alert";
 

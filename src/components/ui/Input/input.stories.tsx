@@ -4,7 +4,7 @@ import React from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 import { SearchOutlined } from "@ant-design/icons";
 
-import { Input, type InputProps } from "./input";
+import { Input, type InputProps } from "@/components/ui/input/input";
 
 const meta: Meta<InputProps> = {
   title: "Components/UI/Input",
