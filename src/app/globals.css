@@ -1,7 +1,16 @@
 @import "antd/dist/reset.css";
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Pretendard";
+  src: url("../assets/fonts/PretendardVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --font-pretendard: "Pretendard";
   --background: #f7f8fa;
   --foreground: #333333;
 }
@@ -51,7 +60,7 @@
 
   /* Typography */
   --font-sans:
-    var(--font-pretendard), "Pretendard", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    var(--font-pretendard, "Pretendard"), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -59,7 +68,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family:
-    var(--font-pretendard),
+    var(--font-pretendard, "Pretendard"),
     -apple-system,
     BlinkMacSystemFont,
     system-ui,
