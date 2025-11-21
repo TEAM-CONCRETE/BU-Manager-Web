@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import AntdRegistry from "./antd-registry";
 import AppProviders from "./providers";
 
-const geistSans = Inter({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const pretendard = localFont({
+  src: "../assets/fonts/PretendardVariable.woff2",
+  variable: "--font-pretendard",
+  weight: "100 900",
+  display: "swap",
+  fallback: ["-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
 });
 
 const geistMono = Roboto_Mono({
@@ -26,9 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${pretendard.variable} ${geistMono.variable} antialiased`}>
         <AntdRegistry>
           <AppProviders>{children}</AppProviders>
         </AntdRegistry>
