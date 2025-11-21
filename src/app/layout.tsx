@@ -30,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${pretendard.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${pretendard.className} ${pretendard.variable} ${geistMono.variable} antialiased`}
+      >
         <AntdRegistry>
           <AppProviders>{children}</AppProviders>
         </AntdRegistry>

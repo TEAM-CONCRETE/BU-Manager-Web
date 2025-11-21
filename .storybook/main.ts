@@ -21,6 +21,9 @@ const config: StorybookConfig = {
           "@": fileURLToPath(new URL("../src", import.meta.url)),
         },
       },
+      define: {
+        "process.env": {},
+      },
     });
   },
 };
