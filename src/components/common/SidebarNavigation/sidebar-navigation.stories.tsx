@@ -111,7 +111,7 @@ const featureMenuItems = [
 const defaultBottomAction = {
   label: "현장 추가",
   icon: <PlusOutlined />,
-  onClick: () => console.log("현장 추가 클릭"),
+  onClick: () => {},
 };
 
 export const CompanyWithSites: Story = {
@@ -134,7 +134,6 @@ export const WithSearch: Story = {
   name: "검색 입력 포함",
   args: {
     menuItems: siteMenuItems,
-    onSearch: (value) => console.log("검색:", value),
     bottomAction: defaultBottomAction,
   },
 };
