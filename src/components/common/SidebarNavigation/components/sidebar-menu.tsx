@@ -33,23 +33,33 @@ export function SidebarMenu({ items, collapsed, isOverlayOpen, onNavigate }: Sid
               : "text-text-base hover:bg-bg-subtle dark:text-dark-text-base dark:hover:bg-dark-bg-surface/60",
         )}
       >
-        {item.icon && (
-          <span className={cn("flex items-center text-inherit", collapsed ? "text-xl" : undefined)}>
-            {item.icon}
-          </span>
-        )}
+        {item.icon &&
+          (typeof item.icon === "string" ? (
+            <span
+              className={cn(
+                "flex items-center",
+                isActive
+                  ? "text-brand-primary dark:text-brand-primary"
+                  : "text-text-subtle dark:text-dark-text-base",
+                collapsed ? "text-xl" : undefined,
+              )}
+            >
+              {item.icon}
+            </span>
+          ) : (
+            item.icon
+          ))}
         {!collapsed && <span className="flex-1">{item.label}</span>}
       </div>
     );
 
     if (item.href) {
+      const handleLinkClick = () => {
+        item.onClick?.();
+        if (isOverlayOpen) onNavigate?.();
+      };
       return (
-        <Link
-          key={item.id}
-          href={item.href}
-          className="block"
-          onClick={isOverlayOpen ? onNavigate : undefined}
-        >
+        <Link key={item.id} href={item.href} className="block" onClick={handleLinkClick}>
           {content}
         </Link>
       );
