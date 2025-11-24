@@ -22,17 +22,43 @@ export function RoleGuard({
   const router = useRouter();
   const user = useSessionStore((state) => state.user);
   const [hasRequestedRefresh, setHasRequestedRefresh] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState<"idle" | "pending" | "success" | "error">(
+    user ? "success" : "idle",
+  );
   const [hasRedirected, setHasRedirected] = useState(false);
   const { refetch, isFetching } = useRefreshSession(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (user || hasRequestedRefresh || isFetching) return;
+    if (user || hasRequestedRefresh) return;
     setHasRequestedRefresh(true);
-    refetch();
-  }, [user, hasRequestedRefresh, isFetching, refetch]);
+    setIsRefreshing(true);
+    setRefreshStatus("pending");
+    refetch()
+      .then(() => {
+        setRefreshStatus("success");
+      })
+      .catch(() => {
+        setRefreshStatus("error");
+      })
+      .finally(() => {
+        setIsRefreshing(false);
+      });
+  }, [user, hasRequestedRefresh, refetch]);
 
   useEffect(() => {
-    if (isFetching) return;
+    const hasSession = !!user;
+    const shouldWait =
+      isFetching ||
+      isRefreshing ||
+      (!hasSession && !hasRequestedRefresh) ||
+      refreshStatus === "pending" ||
+      (refreshStatus === "success" && !hasSession);
+
+    if (shouldWait) {
+      return;
+    }
+
     if (!user && !hasRedirected) {
       setHasRedirected(true);
       router.replace(unauthenticatedRedirect);
@@ -48,6 +74,9 @@ export function RoleGuard({
     allowedRoles,
     hasRedirected,
     isFetching,
+    isRefreshing,
+    hasRequestedRefresh,
+    refreshStatus,
     roleRedirectMap,
     router,
     unauthenticatedRedirect,
