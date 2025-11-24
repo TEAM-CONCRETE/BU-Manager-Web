@@ -1,34 +1,106 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+
+import { notification } from "antd";
+import { useMutation } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/Button/button";
 import { Input } from "@/components/ui/Input/input";
+import { checkUserId } from "@/lib/api/check-user-id";
+import { registerManager } from "@/lib/api/register-manager";
 
 export function SiteManagerSignupForm() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [secretKey, setSecretKey] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [idStatusMessage, setIdStatusMessage] = useState<string | null>(null);
   const [idStatus, setIdStatus] = useState<"idle" | "error" | "success">("idle");
+  const [formMessage, setFormMessage] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const duplicateMutation = useMutation({
+    mutationFn: checkUserId,
+    onSuccess: (exists) => {
+      if (exists) {
+        setIdStatus("error");
+        setIdStatusMessage("이미 존재하는 ID입니다.");
+      } else {
+        setIdStatus("success");
+        setIdStatusMessage("사용 가능한 ID입니다.");
+      }
+    },
+    onError: (error: Error) => {
+      setIdStatus("error");
+      setIdStatusMessage(error.message);
+    },
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: registerManager,
+    onSuccess: () => {
+      setFormError(null);
+      setFormMessage("회원가입 신청이 완료되었습니다. 승인 안내를 확인해주세요.");
+      notification.success({
+        message: "회원가입이 완료되었습니다.",
+        placement: "topRight",
+        duration: 2,
+      });
+      setTimeout(() => {
+        router.push("/login/site-manager");
+      }, 300);
+    },
+    onError: (error: Error) => {
+      setFormMessage(null);
+      setFormError(error.message);
+      notification.error({
+        message: error.message,
+        placement: "topRight",
+        duration: 2,
+      });
+    },
+  });
 
   const handleDuplicateCheck = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    // TODO: 실제 중복 확인 API 연동
-    setIdStatus("error");
-    setIdStatusMessage("이미 존재하는 ID입니다.");
+    if (!userId) {
+      setIdStatus("error");
+      setIdStatusMessage("아이디를 입력한 뒤 중복 확인을 진행해주세요.");
+      return;
+    }
+    duplicateMutation.mutate(userId);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    // TODO: 회원가입 API 연동
+    setFormError(null);
+    setFormMessage(null);
+    registerMutation.mutate({
+      managerName: name,
+      userId,
+      password,
+      confirmPassword,
+      secretKey,
+      phone: phoneNumber,
+      passwordMatching: password === confirmPassword,
+    });
   };
 
   const isDisabled =
-    !name || !userId || !password || !secretKey || !phoneNumber || password.length < 8;
+    !name ||
+    !userId ||
+    !password ||
+    !confirmPassword ||
+    !secretKey ||
+    !phoneNumber ||
+    password.length < 8 ||
+    password !== confirmPassword;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 text-text-strong dark:text-dark-text-strong">
@@ -67,8 +139,9 @@ export function SiteManagerSignupForm() {
               variant="ghost"
               className="h-12 rounded-xl border border-brand-primary px-6 text-brand-primary sm:self-start"
               onClick={handleDuplicateCheck}
+              disabled={duplicateMutation.isPending}
             >
-              중복 확인
+              {duplicateMutation.isPending ? "확인 중..." : "중복 확인"}
             </Button>
           </div>
           {idStatus === "error" ? (
@@ -88,6 +161,20 @@ export function SiteManagerSignupForm() {
         />
 
         <Input
+          label="비밀번호 확인"
+          placeholder="비밀번호를 다시 입력해주세요"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+          error={
+            confirmPassword && confirmPassword !== password
+              ? "비밀번호가 일치하지 않습니다."
+              : undefined
+          }
+        />
+
+        <Input
           label="Secret Key"
           placeholder="시크릿 키를 입력해주세요"
           value={secretKey}
@@ -103,6 +190,11 @@ export function SiteManagerSignupForm() {
           onChange={(e) => setPhoneNumber(e.target.value)}
           required
         />
+        {formError ? (
+          <p className="text-sm font-semibold text-state-danger">{formError}</p>
+        ) : formMessage ? (
+          <p className="text-sm font-semibold text-brand-primary">{formMessage}</p>
+        ) : null}
       </div>
 
       <div className="space-y-4">
@@ -110,9 +202,9 @@ export function SiteManagerSignupForm() {
           type="submit"
           size="lg"
           className="h-12 w-full rounded-xl bg-brand-primary text-white hover:bg-brand-primary-strong"
-          disabled={isDisabled}
+          disabled={isDisabled || registerMutation.isPending}
         >
-          확인
+          {registerMutation.isPending ? "진행 중..." : "확인"}
         </Button>
         <p className="!mt-2 text-center text-sm text-text-subtle dark:text-dark-text-base">
           이미 계정이 있으신가요?{" "}
@@ -124,4 +216,3 @@ export function SiteManagerSignupForm() {
     </form>
   );
 }
-1;
