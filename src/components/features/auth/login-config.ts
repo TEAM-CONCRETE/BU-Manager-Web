@@ -22,6 +22,7 @@ type FormConfig = {
   accentColorClass?: string;
   allowedRoles: RawRole[];
   roleMismatchMessages?: Partial<Record<RawRole, string>>;
+  defaultRedirect: string;
   supportLink: {
     label: string;
     href: string;
@@ -60,6 +61,7 @@ export const loginConfigs: Record<LoginVariant, LoginConfig> = {
       roleMismatchMessages: {
         ROLE_MANAGER: "현장 관리자 로그인 페이지를 이용해주세요.",
       },
+      defaultRedirect: "/company/dashboard",
       supportLink: {
         label: "현장 관리자 로그인",
         href: "/login/site-manager",
@@ -91,6 +93,7 @@ export const loginConfigs: Record<LoginVariant, LoginConfig> = {
       roleMismatchMessages: {
         ROLE_CORPORATION: "기업 로그인 페이지를 이용해주세요.",
       },
+      defaultRedirect: "/manager/dashboard",
       supportLink: {
         label: "기업 계정 로그인",
         href: "/login/company",

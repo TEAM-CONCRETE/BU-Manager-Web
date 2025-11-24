@@ -30,7 +30,7 @@ export function RoleGuard({
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    if (user || hasRequestedRefresh) return;
+    if (user || hasRequestedRefresh || isFetching) return;
     setHasRequestedRefresh(true);
     setIsRefreshing(true);
     setRefreshStatus("pending");
@@ -44,7 +44,7 @@ export function RoleGuard({
       .finally(() => {
         setIsRefreshing(false);
       });
-  }, [user, hasRequestedRefresh, refetch]);
+  }, [user, hasRequestedRefresh, isFetching, refetch]);
 
   useEffect(() => {
     const hasSession = !!user;

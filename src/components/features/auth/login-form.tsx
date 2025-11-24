@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button, type ButtonProps } from "@/components/ui/Button/button";
 import { Input } from "@/components/ui/Input/input";
@@ -19,6 +20,7 @@ type LoginFormProps = {
   accentColorClass?: string;
   allowedRoles: RawRole[];
   roleMismatchMessages?: Partial<Record<RawRole, string>>;
+  defaultRedirect: string;
   supportLink: {
     label: string;
     href: string;
@@ -39,6 +41,7 @@ export function LoginForm({
   accentColorClass,
   allowedRoles,
   roleMismatchMessages,
+  defaultRedirect,
   supportLink,
   signupLink,
 }: LoginFormProps) {
@@ -46,14 +49,26 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const loginMutation = useLoginMutation({ allowedRoles, roleMismatchMessages });
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams?.get("next");
+  const redirectTarget =
+    nextParam && nextParam.startsWith("/") ? decodeURIComponent(nextParam) : defaultRedirect;
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    loginMutation.mutate({
-      username: email,
-      password,
-      rememberMe,
-    });
+    loginMutation.mutate(
+      {
+        username: email,
+        password,
+        rememberMe,
+      },
+      {
+        onSuccess: () => {
+          router.replace(redirectTarget);
+        },
+      },
+    );
   };
 
   const accentClass = accentColorClass ?? "text-brand-primary";
