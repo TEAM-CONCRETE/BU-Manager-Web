@@ -7,6 +7,8 @@ import Link from "next/link";
 import { Button, type ButtonProps } from "@/components/ui/Button/button";
 import { Input } from "@/components/ui/Input/input";
 import { cn } from "@/utils/cn";
+import { useLoginMutation } from "@/hooks/use-login";
+import type { RawRole } from "@/utils/map-role";
 
 type LoginFormProps = {
   title: string;
@@ -15,6 +17,8 @@ type LoginFormProps = {
   primaryButtonLabel: string;
   primaryButtonVariant?: ButtonProps["variant"];
   accentColorClass?: string;
+  allowedRoles: RawRole[];
+  roleMismatchMessages?: Partial<Record<RawRole, string>>;
   supportLink: {
     label: string;
     href: string;
@@ -33,20 +37,23 @@ export function LoginForm({
   primaryButtonLabel,
   primaryButtonVariant = "primary",
   accentColorClass,
+  allowedRoles,
+  roleMismatchMessages,
   supportLink,
   signupLink,
 }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const loginMutation = useLoginMutation({ allowedRoles, roleMismatchMessages });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    // Placeholder for API call
-    setTimeout(() => setIsSubmitting(false), 900);
+    loginMutation.mutate({
+      username: email,
+      password,
+      rememberMe,
+    });
   };
 
   const accentClass = accentColorClass ?? "text-brand-primary";
@@ -62,13 +69,13 @@ export function LoginForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <Input
-            label="이메일"
-            placeholder="name@company.com"
-            type="email"
+            label="아이디"
+            placeholder="계정 ID를 입력하세요"
+            type="text"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            autoComplete="email"
+            autoComplete="username"
           />
           <Input
             label="비밀번호"
@@ -97,12 +104,18 @@ export function LoginForm({
           type="submit"
           size="lg"
           className="w-full"
-          disabled={isSubmitting}
+          disabled={loginMutation.isPending}
           variant={primaryButtonVariant}
         >
-          {isSubmitting ? "로그인 중..." : primaryButtonLabel}
+          {loginMutation.isPending ? "로그인 중..." : primaryButtonLabel}
         </Button>
       </form>
+
+      {loginMutation.isError && (
+        <p className="text-sm font-semibold text-state-danger">
+          {(loginMutation.error as Error).message}
+        </p>
+      )}
 
       <div className="flex flex-col gap-3 text-sm text-text-subtle dark:text-dark-text-base">
         <p className="flex flex-wrap items-center gap-2">
