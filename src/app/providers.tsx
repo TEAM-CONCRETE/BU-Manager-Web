@@ -1,7 +1,10 @@
 "use client";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConfigProvider, theme as antdTheme } from "antd";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+
+import { AuthInitializer } from "@/components/auth/auth-initializer";
 
 type Props = {
   children: ReactNode;
@@ -20,7 +23,8 @@ const resolveIsDark = () => {
 };
 
 export default function AppProviders({ children }: Props) {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => resolveIsDark());
+  const queryClient = useMemo(() => new QueryClient(), []);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
@@ -37,13 +41,6 @@ export default function AppProviders({ children }: Props) {
       media.removeEventListener("change", handleMediaChange);
       observer.disconnect();
     };
-  }, []);
-
-  useEffect(() => {
-    const initial = resolveIsDark();
-    if (initial !== isDark) {
-      setIsDark(initial);
-    }
   }, []);
 
   const baseTokens = {
@@ -81,19 +78,19 @@ export default function AppProviders({ children }: Props) {
   };
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: isDark
-          ? antdTheme.darkAlgorithm
-          : antdTheme.defaultAlgorithm,
-        token: {
-          ...baseTokens,
-          ...(isDark ? darkTokens : lightTokens),
-        },
-      }}
-    >
-      {children}
-    </ConfigProvider>
+    <QueryClientProvider client={queryClient}>
+      <ConfigProvider
+        theme={{
+          algorithm: isDark ? antdTheme.darkAlgorithm : antdTheme.defaultAlgorithm,
+          token: {
+            ...baseTokens,
+            ...(isDark ? darkTokens : lightTokens),
+          },
+        }}
+      >
+        {children}
+        <AuthInitializer />
+      </ConfigProvider>
+    </QueryClientProvider>
   );
 }
-

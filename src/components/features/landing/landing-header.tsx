@@ -34,15 +34,21 @@ export function LandingHeader() {
           ))}
         </nav>
         <div className="flex flex-wrap items-center gap-3">
-          <Button size="md" variant="primary">
-            기업 로그인
-          </Button>
-          <Button size="md" variant="ghost" className="border-brand-primary text-brand-primary">
-            관리자 로그인
-          </Button>
-          <Button size="md" variant="ghost" className="border-border text-text-subtle">
-            관리자 회원가입
-          </Button>
+          <Link href="/login/company">
+            <Button size="md" variant="primary">
+              기업 로그인
+            </Button>
+          </Link>
+          <Link href="/login/site-manager">
+            <Button size="md" variant="ghost" className="border-brand-primary text-brand-primary">
+              관리자 로그인
+            </Button>
+          </Link>
+          <Link href="/signup">
+            <Button size="md" variant="ghost" className="border-border text-text-subtle">
+              관리자 회원가입
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

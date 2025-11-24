@@ -2141,6 +2141,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.90.10":
+  version: 5.90.10
+  resolution: "@tanstack/query-core@npm:5.90.10"
+  checksum: 26578a1d2a4107b9e6b8d880980e56ab93665e6d5fe8d7e6abf840a753a66015bb7b37277bdf903c825249d5a6afb086bfcd6251935e4798efbbbf5890f78f1e
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.90.10":
+  version: 5.90.10
+  resolution: "@tanstack/react-query@npm:5.90.10"
+  dependencies:
+    "@tanstack/query-core": 5.90.10
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 9656e677e0012d141131669a97774264e9aeebca332861dcc590f81a629760236914bf2b6791d45f33f5e4482b081749fe59850d3c684ae8956fa61095db0b4a
+  languageName: node
+  linkType: hard
+
 "@testing-library/dom@npm:10.4.0":
   version: 10.4.0
   resolution: "@testing-library/dom@npm:10.4.0"
@@ -3217,6 +3235,7 @@ __metadata:
     "@storybook/addon-essentials": ^8.1.10
     "@storybook/react-vite": ^8.1.10
     "@tailwindcss/postcss": ^4
+    "@tanstack/react-query": ^5.90.10
     "@types/node": ^20
     "@types/react": ^18
     "@types/react-dom": ^18
@@ -3237,6 +3256,7 @@ __metadata:
     tailwindcss: ^4
     typescript: ^5
     vite: ^5.4.8
+    zustand: ^5.0.8
   languageName: unknown
   linkType: soft
 
@@ -9036,5 +9056,26 @@ __metadata:
   version: 1.2.2
   resolution: "yocto-queue@npm:1.2.2"
   checksum: 92dd9880c324dbc94ff4b677b7d350ba8d835619062b7102f577add7a59ab4d87f40edc5a03d77d369dfa9d11175b1b2ec4a06a6f8a5d8ce5d1306713f66ee41
+  languageName: node
+  linkType: hard
+
+"zustand@npm:^5.0.8":
+  version: 5.0.8
+  resolution: "zustand@npm:5.0.8"
+  peerDependencies:
+    "@types/react": ">=18.0.0"
+    immer: ">=9.0.6"
+    react: ">=18.0.0"
+    use-sync-external-store: ">=1.2.0"
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+    immer:
+      optional: true
+    react:
+      optional: true
+    use-sync-external-store:
+      optional: true
+  checksum: 1a0f896f335e21841509a605fb61db34342497c5073f8c4b69889a669f829c9cf39d0282d68ac8fec1c8814cdaa89ee6711d59989feb80dc0364f19ac72e75e0
   languageName: node
   linkType: hard

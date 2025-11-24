@@ -1,9 +1,9 @@
 "use client";
 
-import { FeaturesSection } from "@/components/landing/features-section";
-import { HeroSection } from "@/components/landing/hero-section";
-import { LandingFooter } from "@/components/landing/landing-footer";
-import { LandingHeader } from "@/components/landing/landing-header";
+import { FeaturesSection } from "@/components/features/landing/features-section";
+import { HeroSection } from "@/components/features/landing/hero-section";
+import { LandingFooter } from "@/components/features/landing/landing-footer";
+import { LandingHeader } from "@/components/features/landing/landing-header";
 import { useScrollParallax } from "@/hooks/use-scroll-parallax";
 
 export default function Home() {
