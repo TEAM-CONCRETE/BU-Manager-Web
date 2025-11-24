@@ -9,9 +9,9 @@ import { cn } from "@/utils/cn";
 type LoginShellProps = {
   brand: {
     badge?: string;
-    title: string;
-    description: string;
-    highlights: {
+    title?: string;
+    description?: string;
+    highlights?: {
       title: string;
       description: string;
     }[];
