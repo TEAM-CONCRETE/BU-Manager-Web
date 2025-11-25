@@ -52,10 +52,10 @@ export function OverviewCard({ client, startDate, endDate, progress }: OverviewC
           <IconBuilding className="h-6 w-6" />
         </div>
         <div>
-          <p className="!mb-0 text-xs font-semibold uppercase tracking-wide text-brand-secondary">
+          <p className="mb-0! text-xs font-semibold uppercase tracking-wide text-brand-secondary">
             기본 정보
           </p>
-          <h2 className="!mb-0 text-xl font-semibold text-text-strong dark:text-dark-text-strong">
+          <h2 className="mb-0! text-xl font-semibold text-text-strong dark:text-dark-text-strong">
             현장 개요
           </h2>
         </div>

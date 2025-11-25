@@ -38,10 +38,10 @@ export function WorkforceCard({ total, salaried, daily, attendanceToday }: Workf
           <IconPeople className="h-6 w-6" />
         </div>
         <div>
-          <p className="!mb-0 text-xs font-semibold uppercase tracking-wide text-brand-secondary">
+          <p className="mb-0! text-xs font-semibold uppercase tracking-wide text-brand-secondary">
             총 근로자 기준
           </p>
-          <h2 className="!mb-0 text-xl font-semibold text-text-strong dark:text-dark-text-strong">
+          <h2 className="mb-0! text-xl font-semibold text-text-strong dark:text-dark-text-strong">
             인원 현황
           </h2>
         </div>
