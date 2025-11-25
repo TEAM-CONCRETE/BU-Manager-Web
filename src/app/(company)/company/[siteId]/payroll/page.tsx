@@ -103,8 +103,11 @@ export default function CompanyPayrollPage({ params }: Props) {
   const lastErrorMessageRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isError || !error) {
+    if (!isError && !error) {
       lastErrorMessageRef.current = null;
+      return;
+    }
+    if (!isError || !error) {
       return;
     }
     const message =
