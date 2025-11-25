@@ -2,31 +2,31 @@
 
 import { cn } from "@/utils/cn";
 
-export type EmploymentType = "regular" | "daily";
-
-type EmploymentToggleOption = {
+export type SegmentedToggleOption<TValue extends string = string> = {
   label: string;
-  value: EmploymentType;
+  value: TValue;
 };
 
-type EmploymentToggleProps = {
-  value: EmploymentType;
-  onChange: (value: EmploymentType) => void;
-  options?: EmploymentToggleOption[];
+type SegmentedToggleProps<TValue extends string = string> = {
+  value: TValue;
+  onChange: (value: TValue) => void;
+  options: SegmentedToggleOption<TValue>[];
+  className?: string;
 };
 
-const defaultOptions: EmploymentToggleOption[] = [
-  { label: "상용직 근로자", value: "regular" },
-  { label: "일용직 근로자", value: "daily" },
-];
-
-export function EmploymentToggle({
+export function SegmentedToggle<TValue extends string = string>({
   value,
   onChange,
-  options = defaultOptions,
-}: EmploymentToggleProps) {
+  options,
+  className,
+}: SegmentedToggleProps<TValue>) {
   return (
-    <div className="flex rounded-2xl bg-brand-primary-soft p-1 text-sm text-text-subtle shadow-sm dark:bg-dark-bg-surface dark:text-dark-text-base">
+    <div
+      className={cn(
+        "flex rounded-2xl bg-brand-primary-soft p-1 text-sm text-text-subtle shadow-sm dark:bg-dark-bg-surface dark:text-dark-text-base",
+        className,
+      )}
+    >
       {options.map((option) => {
         const isActive = option.value === value;
         return (
