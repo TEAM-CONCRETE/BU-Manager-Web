@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import type { ColumnsType } from "antd/es/table";
 
 import { Table, type TableProps as BaseTableProps } from "@/components/ui/Table/table";
@@ -12,45 +14,18 @@ const currencyFormatter = new Intl.NumberFormat("ko-KR", {
 
 const formatAmount = (value?: number) => currencyFormatter.format(value ?? 0);
 
-const statusMeta: Record<PayrollStatus, { label: string; chipClass: string; dotClass: string }> = {
-  PENDING: {
-    label: "지급 예정",
-    chipClass: "bg-yellow-50 text-yellow-800",
-    dotClass: "bg-yellow-400",
-  },
-  IN_PROGRESS: {
-    label: "정산 중",
-    chipClass: "bg-sky-50 text-sky-700",
-    dotClass: "bg-sky-400",
-  },
-  COMPLETED: {
-    label: "정산 완료",
-    chipClass: "bg-emerald-50 text-emerald-700",
-    dotClass: "bg-emerald-400",
-  },
-  PAID: {
-    label: "지급 완료",
-    chipClass: "bg-green-50 text-green-700",
-    dotClass: "bg-green-500",
-  },
-};
-
-const renderStatusPill = (status: PayrollStatus) => {
-  const meta = statusMeta[status];
-  if (!meta) {
-    return (
-      <span className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
-        -
-      </span>
-    );
-  }
+const renderPayoutStatus = (status: PayrollStatus) => {
+  const isPaid = status === "PAID";
+  const label = isPaid ? "지급" : "미지급";
+  const chipClass = isPaid ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600";
+  const dotClass = isPaid ? "bg-green-500" : "bg-red-400";
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${meta.chipClass}`}
+      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${chipClass}`}
     >
-      <span className={`h-1.5 w-1.5 rounded-full ${meta.dotClass}`} />
-      {meta.label}
+      <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+      {label}
     </span>
   );
 };
@@ -60,7 +35,7 @@ const payrollColumns: ColumnsType<PayrollRecord> = [
     title: "근로자명",
     dataIndex: "workerName",
     key: "workerName",
-    align: "left",
+    align: "center",
     render: (value: PayrollRecord["workerName"]) => (
       <span className="font-medium text-text-strong dark:text-dark-text-strong">{value}</span>
     ),
@@ -82,35 +57,35 @@ const payrollColumns: ColumnsType<PayrollRecord> = [
     title: "총 지급액",
     dataIndex: "totalPay",
     key: "totalPay",
-    align: "right",
+    align: "center",
     render: (value) => formatAmount(value),
   },
   {
     title: "비과세 소득",
     dataIndex: "nonTaxableIncome",
     key: "nonTaxableIncome",
-    align: "right",
+    align: "center",
     render: (value) => formatAmount(value),
   },
   {
     title: "원천징수세액(소득세)",
     dataIndex: "withholdingIncomeTax",
     key: "withholdingIncomeTax",
-    align: "right",
+    align: "center",
     render: (value) => formatAmount(value),
   },
   {
     title: "원천징수세액(주민세)",
     dataIndex: "withholdingResidentTax",
     key: "withholdingResidentTax",
-    align: "right",
+    align: "center",
     render: (value) => formatAmount(value),
   },
   {
     title: "지급 여부",
     key: "paymentStatus",
     align: "center",
-    render: (_, record) => renderStatusPill(record.paymentStatus),
+    render: (_, record) => renderPayoutStatus(record.paymentStatus),
   },
   {
     title: "급여명세서 조회",
@@ -123,12 +98,26 @@ const payrollColumns: ColumnsType<PayrollRecord> = [
           type="button"
           disabled={disabled}
           className={cn(
-            "inline-flex items-center rounded-xl px-4 py-1.5 text-sm font-medium transition",
+            "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition",
             disabled
               ? "cursor-not-allowed bg-gray-100 text-gray-400"
-              : "bg-blue-50 text-blue-600 hover:bg-blue-100",
+              : "bg-[#1C67B0] !text-white hover:bg-[#155089]",
           )}
         >
+          <span
+            className={cn(
+              "flex h-5 w-5 items-center justify-center rounded-full",
+              disabled && "bg-transparent",
+            )}
+          >
+            <Image
+              src="/assets/icons/eye.svg"
+              alt=""
+              width={16}
+              height={16}
+              className={cn(disabled ? "opacity-40" : "opacity-90")}
+            />
+          </span>
           조회
         </button>
       );
