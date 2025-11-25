@@ -12,68 +12,16 @@ import {
   SegmentedToggle,
   type SegmentedToggleOption,
 } from "@/components/common/toggles/segmented-toggle";
-import { Table } from "@/components/ui/Table/table";
-import { cn } from "@/utils/cn";
 import { buildCompanyNavItems } from "@/constants/company-nav";
 import { useCompanySites } from "@/hooks/use-company-sites";
-
-type AttendanceStatus = "normal" | "late" | "earlyLeave" | "absent";
-
-type AttendanceRecord = {
-  id: string;
-  name: string;
-  ssnMasked: string;
-  status: AttendanceStatus;
-  clockIn?: string;
-  clockOut?: string;
-  totalHours?: string;
-  overtimeSummary?: string;
-};
-
-const regularAttendanceRecords: AttendanceRecord[] = [
-  {
-    id: "r1",
-    name: "김철수",
-    ssnMasked: "850101-1******",
-    status: "normal",
-    clockIn: "08:00",
-    clockOut: "18:00",
-    totalHours: "8시간",
-    overtimeSummary: "2시간 / - / -",
-  },
-  {
-    id: "r2",
-    name: "박영희",
-    ssnMasked: "920315-2******",
-    status: "late",
-    clockIn: "08:30",
-    clockOut: "18:00",
-    totalHours: "7.5시간",
-    overtimeSummary: "1.5시간 / 1시간 / -",
-  },
-  {
-    id: "r3",
-    name: "이민수",
-    ssnMasked: "880722-1******",
-    status: "normal",
-    clockIn: "07:55",
-    clockOut: "18:30",
-    totalHours: "8.5시간",
-    overtimeSummary: "2.5시간 / - / -",
-  },
-  {
-    id: "r4",
-    name: "최정훈",
-    ssnMasked: "750908-1******",
-    status: "absent",
-    clockIn: "-",
-    clockOut: "-",
-    totalHours: "-",
-    overtimeSummary: "-",
-  },
-];
-
-const dailyAttendanceRecords: AttendanceRecord[] = regularAttendanceRecords;
+import { useAttendanceRecords } from "@/hooks/use-attendance-records";
+import { Table } from "@/components/ui/Table/table";
+import { cn } from "@/utils/cn";
+import type {
+  AttendanceRecord,
+  AttendanceStatus,
+  EmploymentType,
+} from "@/lib/api/get-attendance";
 
 const yearOptions = Array.from({ length: 3 }).map((_, index) => {
   const year = String(2024 + index);
@@ -88,7 +36,7 @@ const dayOptions = Array.from({ length: 31 }).map((_, index) => {
   return { label: `${Number(day)}일`, value: day };
 });
 
-const employmentOptions: SegmentedToggleOption[] = [
+const employmentOptions: SegmentedToggleOption<EmploymentType>[] = [
   { label: "상용직 근로자", value: "regular" },
   { label: "일용직 근로자", value: "daily" },
 ];
@@ -195,14 +143,51 @@ export default function CompanyAttendancePage({ params }: Props) {
 
   const navItems = useMemo(() => buildCompanyNavItems(params.siteId), [params.siteId]);
 
-  const [employmentType, setEmploymentType] = useState("regular");
+  const [employmentType, setEmploymentType] = useState<EmploymentType>("regular");
   const [selectedDate, setSelectedDate] = useState<InlineDateValue>({
     year: "2025",
     month: "09",
     day: "10",
   });
 
-  const records = employmentType === "regular" ? regularAttendanceRecords : dailyAttendanceRecords;
+  const selectedDateKey = useMemo(
+    () => `${selectedDate.year}-${selectedDate.month}-${selectedDate.day}`,
+    [selectedDate],
+  );
+
+  const attendanceQuery = useAttendanceRecords({
+    siteId: params.siteId,
+    employmentType,
+    date: selectedDateKey,
+  });
+
+  const attendanceData = attendanceQuery.data;
+  const attendanceRecords = attendanceData?.records ?? [];
+  const totalWorkers = attendanceData?.totalWorkers ?? attendanceRecords.length;
+  const presentWorkers =
+    attendanceData?.checkedInWorkers ??
+    attendanceRecords.filter((record) => record.status !== "absent").length;
+
+  const summaryCounts = useMemo<Record<AttendanceStatus, number>>(() => {
+    const base: Record<AttendanceStatus, number> = {
+      normal: 0,
+      late: 0,
+      earlyLeave: 0,
+      absent: 0,
+    };
+
+    if (attendanceData?.summary) {
+      return { ...base, ...attendanceData.summary };
+    }
+
+    return attendanceRecords.reduce((acc, record) => {
+      acc[record.status] += 1;
+      return acc;
+    }, base);
+  }, [attendanceData?.summary, attendanceRecords]);
+
+  const attendanceError =
+    attendanceQuery.error instanceof Error ? attendanceQuery.error.message : null;
 
   return (
     <div className="min-h-full bg-bg-page px-4 py-6 dark:bg-dark-bg-page sm:px-6 lg:px-10 lg:py-8">
@@ -238,38 +223,54 @@ export default function CompanyAttendancePage({ params }: Props) {
             </div>
 
             <div className="flex items-center gap-3">
-              <p className="!mb-0 text-sm text-text-subtle dark:text-dark-text-base">4명 / 20명</p>
+              <p className="!mb-0 text-sm text-text-subtle dark:text-dark-text-base">
+                {`${presentWorkers}명 / ${totalWorkers}명`}
+              </p>
               <button
                 type="button"
                 className="flex h-10 w-10 items-center justify-center rounded-xl border border-border text-text-subtle hover:bg-bg-subtle dark:border-dark-border dark:text-dark-text-base dark:hover:bg-dark-bg-surface"
+                onClick={() => void attendanceQuery.refetch()}
+                disabled={attendanceQuery.isFetching || attendanceQuery.isLoading}
+                aria-label="근태 정보 새로고침"
               >
-                ↻
+                <span
+                  className={cn(
+                    "text-lg",
+                    attendanceQuery.isFetching || attendanceQuery.isLoading ? "animate-spin" : "",
+                  )}
+                >
+                  ↻
+                </span>
               </button>
             </div>
           </div>
 
+          {attendanceError ? (
+            <p className="mt-3 text-sm text-red-500">{attendanceError}</p>
+          ) : null}
+
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <AttendanceSummaryCard
               label="정상 출근"
-              value="15명"
+              value={`${summaryCounts.normal}명`}
               dotColor="bg-green-500"
               textColor="text-green-600"
             />
             <AttendanceSummaryCard
               label="지각"
-              value="2명"
+              value={`${summaryCounts.late}명`}
               dotColor="bg-yellow-400"
               textColor="text-yellow-600"
             />
             <AttendanceSummaryCard
               label="조퇴"
-              value="0명"
+              value={`${summaryCounts.earlyLeave}명`}
               dotColor="bg-orange-500"
               textColor="text-orange-600"
             />
             <AttendanceSummaryCard
               label="결근"
-              value="3명"
+              value={`${summaryCounts.absent}명`}
               dotColor="bg-red-500"
               textColor="text-red-600"
             />
@@ -279,8 +280,9 @@ export default function CompanyAttendancePage({ params }: Props) {
         <section className="rounded-3xl border border-border bg-bg-surface p-6 dark:border-dark-border dark:bg-dark-bg-surface">
           <Table<AttendanceRecord>
             columns={attendanceColumns}
-            dataSource={records}
+            dataSource={attendanceRecords}
             rowKey="id"
+            loading={attendanceQuery.isLoading || attendanceQuery.isFetching}
             pagination={{
               pageSize: 10,
               position: ["bottomRight"],
