@@ -61,7 +61,7 @@ export const loginConfigs: Record<LoginVariant, LoginConfig> = {
       roleMismatchMessages: {
         ROLE_MANAGER: "현장 관리자 로그인 페이지를 이용해주세요.",
       },
-      defaultRedirect: "/company/dashboard",
+      defaultRedirect: "/company",
       supportLink: {
         label: "현장 관리자 로그인",
         href: "/login/site-manager",
