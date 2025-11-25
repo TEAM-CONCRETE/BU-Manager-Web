@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import {
   getPayrollRecords,
@@ -7,7 +7,6 @@ import {
 } from "@/lib/api/get-payroll-records";
 
 export function usePayrollRecords(params: GetPayrollRecordsParams) {
-  const queryClient = useQueryClient();
   const queryKey = [
     "payroll",
     "records",
@@ -18,20 +17,15 @@ export function usePayrollRecords(params: GetPayrollRecordsParams) {
     params.day,
     params.page,
     params.size,
-    params.keyword,
-    params.status,
     params.payCycle,
     params.weekOfMonth,
   ] as const;
 
-  const cachedData = queryClient.getQueryData<GetPayrollRecordsResponse["data"]>(queryKey);
-
-  return useQuery<GetPayrollRecordsResponse["data"]>({
+  return useQuery<GetPayrollRecordsResponse>({
     queryKey,
     queryFn: () => getPayrollRecords(params),
-    staleTime: Infinity,
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
-    enabled: !cachedData,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
