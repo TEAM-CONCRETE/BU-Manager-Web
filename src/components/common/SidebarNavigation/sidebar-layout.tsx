@@ -23,15 +23,15 @@ export function SidebarLayout({
   const sidebarWidth = collapsed ? collapsedWidth : expandedWidth;
 
   return (
-    <div className="flex min-h-screen bg-bg-page dark:bg-dark-bg-page">
-      <div className="transition-[width] duration-300" style={{ width: sidebarWidth }}>
+    <div className="flex h-screen overflow-hidden bg-bg-page dark:bg-dark-bg-page">
+      <div className="h-full transition-[width] duration-300" style={{ width: sidebarWidth }}>
         <SidebarNavigation
           {...sidebarProps}
           collapsed={collapsed}
           onCollapseChange={setCollapsed}
         />
       </div>
-      <main className="flex-1 transition-all duration-300">{children}</main>
+      <main className="flex-1 overflow-y-auto transition-all duration-300">{children}</main>
     </div>
   );
 }

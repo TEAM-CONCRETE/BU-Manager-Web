@@ -17,10 +17,11 @@ export function SidebarMenu({ items, collapsed, isOverlayOpen, onNavigate }: Sid
 
   const renderItem = (item: SidebarMenuItem) => {
     const isActive = item.active ?? false;
+    const isLongLabel = typeof item.label === "string" && item.label.length > 15;
     const content = (
       <div
         className={cn(
-          "flex items-center text-base transition-colors",
+          "flex items-center text-sm md:text-base transition-colors",
           collapsed
             ? "mx-auto h-12 w-12 justify-center rounded-2xl border border-transparent"
             : "gap-3 rounded-lg px-3 py-3",
@@ -33,23 +34,42 @@ export function SidebarMenu({ items, collapsed, isOverlayOpen, onNavigate }: Sid
               : "text-text-base hover:bg-bg-subtle dark:text-dark-text-base dark:hover:bg-dark-bg-surface/60",
         )}
       >
-        {item.icon && (
-          <span className={cn("flex items-center text-inherit", collapsed ? "text-xl" : undefined)}>
-            {item.icon}
+        {item.icon &&
+          (typeof item.icon === "string" ? (
+            <span
+              className={cn(
+                "flex items-center",
+                isActive
+                  ? "text-brand-primary dark:text-brand-primary"
+                  : "text-text-subtle dark:text-dark-text-base",
+                collapsed ? "text-xl" : undefined,
+              )}
+            >
+              {item.icon}
+            </span>
+          ) : (
+            item.icon
+          ))}
+        {!collapsed && (
+          <span
+            className={cn(
+              "flex-1 break-words leading-tight text-xs md:text-sm",
+              isLongLabel && "text-[11px] md:text-xs",
+            )}
+          >
+            {item.label}
           </span>
         )}
-        {!collapsed && <span className="flex-1">{item.label}</span>}
       </div>
     );
 
     if (item.href) {
+      const handleLinkClick = () => {
+        item.onClick?.();
+        if (isOverlayOpen) onNavigate?.();
+      };
       return (
-        <Link
-          key={item.id}
-          href={item.href}
-          className="block"
-          onClick={isOverlayOpen ? onNavigate : undefined}
-        >
+        <Link key={item.id} href={item.href} className="block" onClick={handleLinkClick}>
           {content}
         </Link>
       );

@@ -11,7 +11,7 @@ export type LoginApiResponse = {
   data: {
     userId: string;
     userName: string;
-    role: "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN";
+    role: "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_CORPORATION";
     expiresIn: number;
     employeeId?: number;
     siteId?: number;
