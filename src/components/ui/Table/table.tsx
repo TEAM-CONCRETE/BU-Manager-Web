@@ -1,7 +1,7 @@
 "use client";
 
 import { Table as AntTable, type TableProps as AntTableProps } from "antd";
-import { ReactNode, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
+import { type CSSProperties, ReactNode, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
 
 import { cn } from "@/utils/cn";
 
@@ -13,6 +13,11 @@ export interface TableProps<RecordType extends Record<string, unknown>>
   density?: "comfortable" | "compact";
   headerExtra?: ReactNode;
   className?: string;
+  showHeaderBar?: boolean;
+  borderedContainer?: boolean;
+  headerCellClassName?: string;
+  headerCellStyle?: CSSProperties;
+  headerCellStyles?: CSSProperties[];
 }
 
 export function Table<RecordType extends Record<string, unknown> = Record<string, unknown>>({
@@ -21,19 +26,45 @@ export function Table<RecordType extends Record<string, unknown> = Record<string
   headerExtra,
   className,
   rowClassName,
+  showHeaderBar = true,
+  borderedContainer = true,
+  headerCellClassName,
+  headerCellStyle,
+  headerCellStyles,
   ...props
 }: TableProps<RecordType>) {
   const components: TableComponentProps<RecordType> = {
     header: {
-      cell: (cellProps: ThHTMLAttributes<HTMLTableCellElement>) => (
-        <th
-          {...cellProps}
-          className={cn(
-            cellProps.className,
-            "bg-bg-subtle text-left text-text-subtle text-xs font-semibold uppercase tracking-wide dark:bg-dark-bg-surface dark:text-dark-text-strong",
-          )}
-        />
-      ),
+      cell: (
+        cellProps: ThHTMLAttributes<HTMLTableCellElement> & {
+          column?: { key?: string };
+          columnIndex?: number;
+        },
+      ) => {
+        const columnIndex =
+          typeof cellProps.columnIndex === "number" ? cellProps.columnIndex : undefined;
+        const extraStyle =
+          typeof columnIndex === "number" && headerCellStyles?.[columnIndex]
+            ? headerCellStyles[columnIndex]
+            : undefined;
+
+        return (
+          <th
+            {...cellProps}
+            className={cn(
+              cellProps.className,
+              headerCellClassName ?? "!bg-state-info-weak",
+              "text-left !text-text-base text-xs font-semibold uppercase tracking-wide",
+              headerCellClassName ? undefined : "ant-table-cell",
+            )}
+            style={{
+              ...cellProps.style,
+              ...headerCellStyle,
+              ...extraStyle,
+            }}
+          />
+        );
+      },
     },
     body: {
       cell: (cellProps: TdHTMLAttributes<HTMLTableCellElement>) => (
@@ -41,11 +72,10 @@ export function Table<RecordType extends Record<string, unknown> = Record<string
           {...cellProps}
           className={cn(
             cellProps.className,
-            "text-left text-sm dark:text-[var(--color-dark-text-strong)]",
+            "text-left text-sm",
+            zebra ? "text-text-base dark:text-white" : "text-[#0b0f1a] dark:text-white",
           )}
-          style={{
-            color: zebra ? "var(--color-text-strong)" : "#0b0f1a",
-          }}
+          style={cellProps.style}
         />
       ),
     },
@@ -54,20 +84,25 @@ export function Table<RecordType extends Record<string, unknown> = Record<string
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-2xl border border-border dark:border-dark-border",
+        "w-full overflow-hidden [&_.ant-table-row:hover>td]:!bg-transparent [&_.ant-table-cell-row-hover]:!bg-transparent",
+        borderedContainer ? "rounded-2xl border border-border dark:border-dark-border" : "",
         className,
       )}
     >
-      <div className="flex items-center justify-between border-b border-border bg-bg-surface px-4 py-3 dark:border-dark-border dark:bg-dark-bg-surface">
-        {props.title ? (
-          <div className="text-base font-semibold text-text-strong dark:text-dark-text-strong">
-            {typeof props.title === "function" ? props.title(props.dataSource ?? []) : props.title}
-          </div>
-        ) : (
-          <span />
-        )}
-        {headerExtra}
-      </div>
+      {showHeaderBar && (
+        <div className="flex items-center justify-between border-b border-border bg-bg-surface px-4 py-3 dark:border-dark-border dark:bg-dark-bg-surface">
+          {props.title ? (
+            <div className="text-base font-semibold text-text-strong dark:text-dark-text-strong">
+              {typeof props.title === "function"
+                ? props.title(props.dataSource ?? [])
+                : props.title}
+            </div>
+          ) : (
+            <span />
+          )}
+          {headerExtra}
+        </div>
+      )}
       <AntTable<RecordType>
         pagination={props.pagination ?? false}
         components={components}
