@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCompanySites } from "@/hooks/use-company-sites";
@@ -16,7 +16,7 @@ export function CompanySiteRedirector({
 }: Props) {
   const router = useRouter();
   const { data, isLoading } = useCompanySites();
-  const sites = data?.sites ?? [];
+  const sites = useMemo(() => data?.sites ?? [], [data]);
 
   useEffect(() => {
     if (isLoading) {
