@@ -17,10 +17,11 @@ export function SidebarMenu({ items, collapsed, isOverlayOpen, onNavigate }: Sid
 
   const renderItem = (item: SidebarMenuItem) => {
     const isActive = item.active ?? false;
+    const isLongLabel = typeof item.label === "string" && item.label.length > 15;
     const content = (
       <div
         className={cn(
-          "flex items-center text-base transition-colors",
+          "flex items-center text-sm md:text-base transition-colors",
           collapsed
             ? "mx-auto h-12 w-12 justify-center rounded-2xl border border-transparent"
             : "gap-3 rounded-lg px-3 py-3",
@@ -49,7 +50,16 @@ export function SidebarMenu({ items, collapsed, isOverlayOpen, onNavigate }: Sid
           ) : (
             item.icon
           ))}
-        {!collapsed && <span className="flex-1">{item.label}</span>}
+        {!collapsed && (
+          <span
+            className={cn(
+              "flex-1 break-words leading-tight text-xs md:text-sm",
+              isLongLabel && "text-[11px] md:text-xs",
+            )}
+          >
+            {item.label}
+          </span>
+        )}
       </div>
     );
 
