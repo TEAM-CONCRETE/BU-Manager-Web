@@ -25,6 +25,7 @@ type InlineDateFiltersProps = {
   className?: string;
   selectProps?: SelectProps;
   popupClassName?: string;
+  hideDay?: boolean;
 };
 
 export function InlineDateFilters({
@@ -36,6 +37,7 @@ export function InlineDateFilters({
   className,
   selectProps,
   popupClassName = "inline-date-filters-dropdown",
+  hideDay = false,
 }: InlineDateFiltersProps) {
   const handleChange = (key: keyof InlineDateValue) => (selected: string) => {
     onChange({ ...value, [key]: selected });
@@ -65,14 +67,16 @@ export function InlineDateFilters({
         onChange={handleChange("month")}
         popupClassName={popupClassName}
       />
-      <Select
-        {...sharedSelectProps}
-        className={cn("w-24 md:w-28", sharedSelectProps.className)}
-        options={dayOptions}
-        value={value.day}
-        onChange={handleChange("day")}
-        popupClassName={popupClassName}
-      />
+      {!hideDay && (
+        <Select
+          {...sharedSelectProps}
+          className={cn("w-24 md:w-28", sharedSelectProps.className)}
+          options={dayOptions}
+          value={value.day}
+          onChange={handleChange("day")}
+          popupClassName={popupClassName}
+        />
+      )}
     </div>
   );
 }
