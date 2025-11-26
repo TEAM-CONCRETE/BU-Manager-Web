@@ -93,7 +93,7 @@ export const loginConfigs: Record<LoginVariant, LoginConfig> = {
       roleMismatchMessages: {
         ROLE_CORPORATION: "기업 로그인 페이지를 이용해주세요.",
       },
-      defaultRedirect: "/manager/dashboard",
+      defaultRedirect: "/manager/attendance",
       supportLink: {
         label: "기업 계정 로그인",
         href: "/login/company",
