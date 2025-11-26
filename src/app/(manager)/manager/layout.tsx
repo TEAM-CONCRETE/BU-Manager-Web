@@ -55,7 +55,7 @@ export default function ManagerShellLayout({ children }: ManagerShellLayoutProps
       <SidebarLayout
         menuItems={menuItems}
         searchPlaceholder="메뉴 또는 기능을 검색하세요"
-        logoHref="/manager/dashboard"
+        logoHref="/manager/attendance"
         collapsedWidth={64}
         expandedWidth={256}
       >
