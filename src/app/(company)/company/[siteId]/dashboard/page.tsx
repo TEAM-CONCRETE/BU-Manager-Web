@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { notification } from "antd";
 
 import { CompanyTopNav } from "@/components/features/company/company-top-nav";
 import { OverviewCard } from "@/components/features/company/dashboard/overview-card";
@@ -12,6 +13,7 @@ import { AlertCenterCard } from "@/components/features/company/dashboard/alert-c
 import type { StatusPillProps } from "@/components/ui/StatusPill/status-pill";
 import { buildCompanyNavItems } from "@/constants/company-nav";
 import { useCompanySites } from "@/hooks/use-company-sites";
+import { useSiteDashboard } from "@/hooks/use-site-dashboard";
 
 type ActivityItem = {
   id: string;
@@ -82,6 +84,50 @@ export default function CompanyDashboardPage({ params }: Props) {
 
   const navItems = useMemo(() => buildCompanyNavItems(params.siteId), [params.siteId]);
 
+  const { data: dashboard, isError, error } = useSiteDashboard(Number(params.siteId));
+
+  const lastErrorMessageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isError && !error) {
+      lastErrorMessageRef.current = null;
+      return;
+    }
+
+    if (!isError || !error) {
+      return;
+    }
+
+    const message =
+      error instanceof Error ? error.message : "대시보드 정보를 불러오는 중 오류가 발생했습니다.";
+
+    if (lastErrorMessageRef.current === message) return;
+
+    lastErrorMessageRef.current = message;
+
+    notification.error({
+      message,
+      placement: "topRight",
+      duration: 3,
+    });
+  }, [isError, error]);
+
+  const siteName =
+    dashboard?.siteInfo.siteName ?? currentSite?.siteName ?? "현장 이름을 불러오는 중...";
+  const siteAddress =
+    dashboard?.siteInfo.siteAddress ??
+    currentSite?.siteAddress ??
+    "현장 운영 현황을 한눈에 확인하세요";
+
+  const clientName = dashboard?.siteInfo.clientName ?? "-";
+  const startDate = dashboard?.siteInfo.startDate ?? "-";
+  const endDate = dashboard?.siteInfo.endDate ?? "-";
+  const progressRate = dashboard?.siteInfo.progressRate ?? 0;
+
+  const workforce = dashboard?.workforceStatus;
+  const safety = dashboard?.safetyStatus;
+  const labor = dashboard?.laborStatus;
+
   return (
     <div className="min-h-full bg-bg-page px-4 py-6 dark:bg-dark-bg-page sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
@@ -89,27 +135,40 @@ export default function CompanyDashboardPage({ params }: Props) {
           <CompanyTopNav items={navItems} defaultActiveId="dashboard" />
           <header>
             <h1 className="mb-0! text-3xl font-bold! text-text-strong dark:text-dark-text-strong">
-              {currentSite?.siteName ?? "현장 이름을 불러오는 중..."}
+              {siteName}
             </h1>
             <p className="mb-0! text-base text-text-subtle dark:text-dark-text-base">
-              {currentSite?.siteAddress ?? "현장 운영 현황을 한눈에 확인하세요"}
+              {siteAddress}
             </p>
           </header>
         </div>
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
           <OverviewCard
-            client="이천시청"
-            startDate="2024.03.15"
-            endDate="2025.12.30"
-            progress={68}
+            client={clientName}
+            startDate={startDate}
+            endDate={endDate}
+            progress={progressRate}
           />
-          <WorkforceCard total={142} salaried={89} daily={53} attendanceToday={127} />
+          <WorkforceCard
+            total={workforce?.totalWorkers ?? 0}
+            salaried={workforce?.permanentWorkers ?? 0}
+            daily={workforce?.dailyWorkers ?? 0}
+            attendanceToday={workforce?.todayAttendance ?? 0}
+          />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
-          <LaborKpiCard />
-          <SafetyKpiCard />
+          <LaborKpiCard
+            totalPendingContracts={labor?.totalPendingContracts ?? 0}
+            pendingContracts={labor?.pendingContracts ?? []}
+          />
+          <SafetyKpiCard
+            safetyRate={safety?.safetyRate ?? 0}
+            todayWarnings={safety?.todayWarnings ?? 0}
+            incompletedEducation={safety?.incompletedEducation ?? 0}
+            completedInspections={safety?.completedInspections ?? 0}
+          />
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
