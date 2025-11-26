@@ -36,6 +36,7 @@ export function useRefreshSession(enabled = true) {
       name: query.data.userName,
       email: query.data.userId,
       role: mappedRole,
+      siteId: query.data.siteId,
     });
   }, [query.isSuccess, query.data, clearUser, setUser]);
 

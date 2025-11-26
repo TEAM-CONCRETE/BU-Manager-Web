@@ -35,6 +35,7 @@ export function useLoginMutation(options: UseLoginMutationOptions = {}) {
         name: data.userName,
         email: data.userId,
         role: mappedRole,
+        siteId: data.siteId,
       });
     },
   });
