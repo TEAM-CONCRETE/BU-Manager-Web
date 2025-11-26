@@ -101,7 +101,7 @@ const payrollColumns: ColumnsType<PayrollRecord> = [
             "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition",
             disabled
               ? "cursor-not-allowed bg-gray-100 text-gray-400"
-              : "bg-[#1C67B0] !text-white hover:bg-[#155089]",
+              : "bg-[#1C67B0] text-white! hover:bg-[#155089]",
           )}
         >
           <span

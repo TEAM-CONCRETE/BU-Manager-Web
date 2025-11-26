@@ -74,3 +74,14 @@ body {
     system-ui,
     sans-serif;
 }
+
+.employee-search-input .ant-input-search-button {
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-inverse);
+}
+
+.employee-search-input .ant-input-search-button:hover {
+  background-color: var(--color-brand-primary-strong);
+  border-color: var(--color-brand-primary-strong);
+}

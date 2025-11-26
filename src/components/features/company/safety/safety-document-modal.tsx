@@ -13,6 +13,7 @@ type SafetyDocumentModalProps = {
   pdfUrl?: string;
   downloadLabel?: string;
   onDownload?: () => void;
+  zIndex?: number;
 };
 
 export function SafetyDocumentModal({
@@ -23,6 +24,7 @@ export function SafetyDocumentModal({
   pdfUrl,
   downloadLabel = "새 창에서 열기",
   onDownload,
+  zIndex,
 }: SafetyDocumentModalProps) {
   const handleDownload = () => {
     if (pdfUrl && onDownload) {
@@ -43,6 +45,7 @@ export function SafetyDocumentModal({
       footer={null}
       centered
       width={900}
+      zIndex={zIndex}
       classNames={{
         content: "bg-white",
         body: "p-6",
