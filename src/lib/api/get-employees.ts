@@ -93,17 +93,23 @@ function mapEmploymentTypeToQuery(type: EmploymentType): "DAILY" | "PERMANENT" {
 }
 
 function mapEmploymentTypeFromApi(empType: string): EmploymentType {
-  return empType === "PERMANENT" ? "REGULAR" : "DAILY";
+  if (empType === "PERMANENT") return "REGULAR";
+  if (empType === "DAILY") return "DAILY";
+  if (empType === "UNCONTRACTED") return "UNCONTRACTED";
+  return "DAILY"; // fallback
 }
 
 export async function getEmployeeList(
   params: GetEmployeeListParams,
 ): Promise<GetEmployeeListResponse> {
   const queryParams = new URLSearchParams({
-    empType: mapEmploymentTypeToQuery(params.employmentType),
     page: String(params.page),
     size: String(params.size),
   });
+
+  if (params.employmentType) {
+    queryParams.set("empType", mapEmploymentTypeToQuery(params.employmentType));
+  }
 
   if (params.searchKeyword) {
     queryParams.set("name", params.searchKeyword);

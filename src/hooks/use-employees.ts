@@ -5,7 +5,11 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { getEmployeeList } from "@/lib/api/get-employees";
 import type { GetEmployeeListParams, GetEmployeeListResponse } from "@/types/employee";
 
-export function useEmployees(params: GetEmployeeListParams) {
+type UseEmployeesOptions = {
+  enabled?: boolean;
+};
+
+export function useEmployees(params: GetEmployeeListParams, options?: UseEmployeesOptions) {
   return useQuery<GetEmployeeListResponse>({
     queryKey: [
       "employees",
@@ -23,5 +27,6 @@ export function useEmployees(params: GetEmployeeListParams) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     placeholderData: keepPreviousData,
+    enabled: options?.enabled ?? true,
   });
 }
