@@ -7,6 +7,7 @@ export type SessionUser = {
   name: string;
   email: string;
   role: "company" | "siteManager";
+  siteId?: number;
 };
 
 type SessionState = {
