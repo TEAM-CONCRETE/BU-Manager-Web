@@ -42,6 +42,7 @@ export default function CompanyEmployeePage({ params }: Props) {
 
   const [employmentType, setEmploymentType] = useState<EmploymentType>("REGULAR");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [appliedKeyword, setAppliedKeyword] = useState<string | undefined>(undefined);
   const [page, setPage] = useState(1);
   const pageSize = 5;
 
@@ -57,7 +58,7 @@ export default function CompanyEmployeePage({ params }: Props) {
     employmentType,
     page,
     size: pageSize,
-    searchKeyword: searchKeyword.trim() || undefined,
+    searchKeyword: appliedKeyword,
   });
 
   const records = employeeData?.records ?? [];
@@ -104,7 +105,9 @@ export default function CompanyEmployeePage({ params }: Props) {
     enabled: Boolean(openDocument),
   });
 
-  const handleSearchSubmit = () => {
+  const handleSearchSubmit = (value: string) => {
+    const keyword = value.trim() || undefined;
+    setAppliedKeyword(keyword);
     setPage(1);
   };
 
@@ -144,7 +147,14 @@ export default function CompanyEmployeePage({ params }: Props) {
                   placeholder="근로자명 입력"
                   allowClear
                   value={searchKeyword}
-                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setSearchKeyword(value);
+                    if (value === "") {
+                      setAppliedKeyword(undefined);
+                      setPage(1);
+                    }
+                  }}
                   onSearch={handleSearchSubmit}
                   enterButton="검색"
                   size="large"
