@@ -1,55 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Modal, Tabs } from "antd";
 
-import { Button } from "@/components/ui/Button/button";
-import { SafetyDocumentModal } from "@/components/features/company/safety/safety-document-modal";
 import type {
   EmployeeContractDocument,
+  EmployeeDetail,
   EmployeePayslipDocument,
-  EmployeeRecord,
 } from "@/types/employee";
 
 type EmployeeDetailModalProps = {
   open: boolean;
   onClose: () => void;
-  employee: EmployeeRecord | null;
+  employee: EmployeeDetail | null;
+  contracts: EmployeeContractDocument[];
+  payslips: EmployeePayslipDocument[];
   siteName?: string;
+  onOpenContract: (contract: EmployeeContractDocument) => void;
+  onOpenPayslip: (payslip: EmployeePayslipDocument) => void;
 };
 
 export function EmployeeDetailModal({
   open,
   onClose,
   employee,
+  contracts,
+  payslips,
   siteName,
+  onOpenContract,
+  onOpenPayslip,
 }: EmployeeDetailModalProps) {
-  const [documentModal, setDocumentModal] = useState<{
-    type: "contract" | "payslip" | null;
-    document: EmployeeContractDocument | EmployeePayslipDocument | null;
-  }>({
-    type: null,
-    document: null,
-  });
-
-  const handleOpenDocument = (
-    type: "contract" | "payslip",
-    document: EmployeeContractDocument | EmployeePayslipDocument,
-  ) => {
-    setDocumentModal({ type, document });
-  };
-
-  const handleCloseDocument = () => {
-    setDocumentModal({ type: null, document: null });
-  };
-
-  if (!employee) {
-    return null;
-  }
-
-  const subtitle = `${siteName ?? ""} | ${new Date().getFullYear()}년 ${
-    new Date().getMonth() + 1
-  }월 기준`;
+  const subtitle = employee ? `${siteName ?? ""} | ${employee.joinDate} 기준` : (siteName ?? "");
 
   return (
     <>
@@ -74,14 +55,11 @@ export function EmployeeDetailModal({
           <div className="border-b border-border px-6 py-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="!mb-0 text-2xl font-semibold text-brand-primary-strong">
+                <p className="mb-0! text-2xl font-semibold text-brand-primary-strong">
                   사원 상세 정보
                 </p>
-                <p className="!mb-0 text-sm text-text-subtle">{subtitle}</p>
+                <p className="mb-0! text-sm text-text-subtle">{subtitle}</p>
               </div>
-              <Button variant="primary" size="md" onClick={onClose}>
-                닫기
-              </Button>
             </div>
           </div>
 
@@ -93,48 +71,56 @@ export function EmployeeDetailModal({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">이름</span>
                   <span className="text-base font-medium text-brand-primary-strong">
-                    {employee.name}
+                    {employee?.name ?? "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">구분</span>
                   <span className="text-base font-medium text-brand-primary-strong">
-                    {employee.employmentType === "REGULAR" ? "상용직" : "일용직"}
+                    {employee?.employmentType === "REGULAR" ? "상용직" : "일용직"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">주민등록번호</span>
                   <span className="text-base text-brand-primary-strong">
-                    {employee.residentNumber}
+                    {employee?.residentNumber ?? "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">연락처</span>
-                  <span className="text-base text-brand-primary-strong">{employee.phone}</span>
+                  <span className="text-base text-brand-primary-strong">
+                    {employee?.phone ?? "-"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">입사일</span>
-                  <span className="text-base text-brand-primary-strong">{employee.joinDate}</span>
+                  <span className="text-base text-brand-primary-strong">
+                    {employee?.joinDate ?? "-"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">퇴사일</span>
                   <span className="text-base text-brand-primary-strong">
-                    {employee.resignDate ?? "-"}
+                    {employee?.resignDate ?? "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">이메일</span>
-                  <span className="text-base text-brand-primary-strong">{employee.email}</span>
+                  <span className="text-base text-brand-primary-strong">
+                    {employee?.email ?? "-"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">비상연락망</span>
                   <span className="text-base text-brand-primary-strong">
-                    {employee.emergencyContact}
+                    {employee?.emergencyContact ?? "-"}
                   </span>
                 </div>
                 <div className="md:col-span-2 flex items-center justify-between">
                   <span className="text-sm text-text-subtle">주소</span>
-                  <span className="text-base text-brand-primary-strong">{employee.address}</span>
+                  <span className="text-base text-brand-primary-strong">
+                    {employee?.address ?? "-"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -148,8 +134,8 @@ export function EmployeeDetailModal({
                   label: "근로계약서 목록",
                   children: (
                     <EmployeeDocumentTable
-                      documents={employee.contracts}
-                      onOpen={(doc) => handleOpenDocument("contract", doc)}
+                      documents={contracts}
+                      onOpen={(doc) => onOpenContract(doc as EmployeeContractDocument)}
                     />
                   ),
                 },
@@ -158,8 +144,8 @@ export function EmployeeDetailModal({
                   label: "급여명세서 목록",
                   children: (
                     <EmployeeDocumentTable
-                      documents={employee.payslips}
-                      onOpen={(doc) => handleOpenDocument("payslip", doc)}
+                      documents={payslips}
+                      onOpen={(doc) => onOpenPayslip(doc as EmployeePayslipDocument)}
                     />
                   ),
                 },
@@ -168,23 +154,6 @@ export function EmployeeDetailModal({
           </div>
         </div>
       </Modal>
-
-      <SafetyDocumentModal
-        open={Boolean(documentModal.type && documentModal.document)}
-        onClose={handleCloseDocument}
-        title={documentModal.type === "contract" ? "근로계약서" : "급여명세서"}
-        subtitle={
-          documentModal.document
-            ? `${siteName ?? ""} | ${documentModal.document.createdAt}`
-            : undefined
-        }
-        pdfUrl={documentModal.document?.pdfUrl}
-        onDownload={() => {
-          if (documentModal.document?.pdfUrl) {
-            window.open(documentModal.document.pdfUrl, "_blank");
-          }
-        }}
-      />
     </>
   );
 }
@@ -217,7 +186,7 @@ function EmployeeDocumentTable({ documents, onOpen }: EmployeeDocumentTableProps
         <tbody>
           {documents.map((doc) => (
             <tr key={doc.id} className="border-b border-border last:border-b-0">
-              <td className="px-4 py-3 text-center text-text-strong">{doc.name}</td>
+              <td className="px-4 py-3 text-center text-text-strong">{doc.title}</td>
               <td className="px-4 py-3 text-center text-text-subtle">{doc.createdAt}</td>
               <td className="px-4 py-3 text-center">
                 <DocumentStatusPill status={doc.status} />

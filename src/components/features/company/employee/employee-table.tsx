@@ -11,7 +11,7 @@ type EmployeeTableProps = {
   pageSize: number;
   total?: number;
   onPageChange: (page: number) => void;
-  onOpenDetail: (employee: EmployeeRecord) => void;
+  onOpenDetail: (employeeId: number) => void;
 };
 
 const buttonClass = (enabled: boolean) =>
@@ -49,7 +49,7 @@ export function EmployeeTable({
       key: "detail",
       align: "center",
       render: (_, record) => (
-        <button type="button" onClick={() => onOpenDetail(record)} className={buttonClass(true)}>
+        <button type="button" onClick={() => onOpenDetail(record.id)} className={buttonClass(true)}>
           열람
         </button>
       ),
