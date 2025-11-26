@@ -9,6 +9,7 @@ import { RoleGuard } from "@/components/auth/role-guard";
 import { SidebarLayout } from "@/components/common/SidebarNavigation/sidebar-layout";
 import type { SidebarMenuItem } from "@/components/common/SidebarNavigation/sidebar-navigation";
 import { managerNavItems } from "@/constants/manager-nav";
+import { isPathActive } from "@/utils/path";
 
 type ManagerShellLayoutProps = {
   children: ReactNode;
@@ -42,7 +43,7 @@ export default function ManagerShellLayout({ children }: ManagerShellLayoutProps
       label: item.label,
       href: item.href,
       icon: <ManagerNavIcon id={item.id} />,
-      active: pathname?.startsWith(item.href) ?? false,
+      active: isPathActive(pathname, item.href),
     }));
   }, [pathname]);
 
