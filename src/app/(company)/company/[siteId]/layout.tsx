@@ -12,6 +12,9 @@ import {
 } from "@/components/features/company/site/site-create-modal";
 import { SiteSecretKeyModal } from "@/components/features/company/site/site-secret-key-modal";
 import { useCompanySites } from "@/hooks/use-company-sites";
+import { useCreateSite } from "@/hooks/use-create-site";
+import { useSessionStore } from "@/stores/session-store";
+import { formatTodayAsYyyyMmDdDot } from "@/utils/date";
 
 const BuildingIcon = ({ className }: { className?: string }) => (
   <svg
@@ -54,6 +57,8 @@ export default function CompanySiteLayout({ children, params }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { data, isLoading, refetch } = useCompanySites();
+  const createSiteMutation = useCreateSite();
+  const user = useSessionStore((state) => state.user);
   const sites = useMemo(() => data?.sites ?? [], [data]);
   const currentSiteId = params.siteId;
 
@@ -108,19 +113,13 @@ export default function CompanySiteLayout({ children, params }: Props) {
   };
 
   const handleSubmitCreateSite = async (values: SiteFormValues) => {
-    // TODO: 실제 현장 생성 API 연동 시 values를 활용하여 요청 바디 구성
-    void values;
-    const now = new Date();
-    const formattedDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(
-      now.getDate(),
-    ).padStart(2, "0")}`;
+    const created = await createSiteMutation.mutateAsync(values);
 
     setSecretKeyInfo({
-      managerKey: "BUILDP-2039-XYZ-9205",
-      workerKey: "BUILDP-2039-XYZ-2057",
-      createdAt: formattedDate,
-      // TODO: 세션 정보에서 실제 로그인한 사용자 이메일 읽어오기
-      createdBy: "관리자 계정 (admin@build-up.kr)",
+      managerKey: created.managerSecretKey,
+      workerKey: created.employeeSecretKey,
+      createdAt: formatTodayAsYyyyMmDdDot(),
+      createdBy: user?.name ? `${user.name}` : undefined,
     });
 
     setIsCreateModalOpen(false);
