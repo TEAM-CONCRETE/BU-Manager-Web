@@ -5,7 +5,14 @@ import {
   type GetAttendanceRecordsResponse,
 } from "@/lib/api/get-attendance-records";
 
-export function useAttendanceRecords(params: GetAttendanceRecordsParams) {
+type UseAttendanceRecordsOptions = {
+  enabled?: boolean;
+};
+
+export function useAttendanceRecords(
+  params: GetAttendanceRecordsParams,
+  options?: UseAttendanceRecordsOptions,
+) {
   const queryClient = useQueryClient();
   const queryKey = [
     "attendance",
@@ -26,7 +33,7 @@ export function useAttendanceRecords(params: GetAttendanceRecordsParams) {
     queryFn: () => getAttendanceRecords(params),
     staleTime: Infinity,
     gcTime: 1000 * 60 * 30,
-    enabled: !cachedData,
+    enabled: options?.enabled ?? !cachedData,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

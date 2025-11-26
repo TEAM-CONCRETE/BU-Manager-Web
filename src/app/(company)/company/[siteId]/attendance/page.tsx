@@ -57,15 +57,20 @@ export default function CompanyAttendancePage({ params }: Props) {
     isError,
     error,
     refetch,
-  } = useAttendanceRecords({
-    siteId: Number(params.siteId),
-    year: selectedDate.year,
-    month: selectedDate.month,
-    day: selectedDate.day,
-    employmentType,
-    page,
-    size: pageSize,
-  });
+  } = useAttendanceRecords(
+    {
+      siteId: Number(params.siteId),
+      year: selectedDate.year,
+      month: selectedDate.month,
+      day: selectedDate.day,
+      employmentType,
+      page,
+      size: pageSize,
+    },
+    {
+      enabled: true,
+    },
+  );
 
   const records = useMemo(() => attendanceData?.records ?? [], [attendanceData]);
   const summary = attendanceData?.summary;
