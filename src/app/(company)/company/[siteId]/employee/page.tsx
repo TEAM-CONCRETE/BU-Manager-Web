@@ -7,10 +7,17 @@ import { SegmentedToggle } from "@/components/common/toggles/segmented-toggle";
 import { CompanyTopNav } from "@/components/features/company/company-top-nav";
 import { EmployeeDetailModal } from "@/components/features/company/employee/employee-detail-modal";
 import { EmployeeTable } from "@/components/features/company/employee/employee-table";
+import { SafetyDocumentModal } from "@/components/features/company/safety/safety-document-modal";
 import { buildCompanyNavItems } from "@/constants/company-nav";
 import { useCompanySites } from "@/hooks/use-company-sites";
+import { useEmployeeDetail } from "@/hooks/use-employee-detail";
+import { useEmployeeDocumentPdf } from "@/hooks/use-employee-document-pdf";
 import { useEmployees } from "@/hooks/use-employees";
-import type { EmploymentType, EmployeeRecord } from "@/types/employee";
+import type {
+  EmployeeContractDocument,
+  EmployeePayslipDocument,
+  EmploymentType,
+} from "@/types/employee";
 
 type Props = {
   params: {
@@ -58,7 +65,12 @@ export default function CompanyEmployeePage({ params }: Props) {
   const totalCount = employeeData?.summary.totalCount ?? 0;
   const tableLoading = isLoading || isFetching;
 
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeRecord | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [openDocument, setOpenDocument] = useState<{
+    type: "contract" | "payslip";
+    id: number;
+    createdAt: string;
+  } | null>(null);
 
   const lastErrorMessageRef = useRef<string | null>(null);
 
@@ -80,6 +92,17 @@ export default function CompanyEmployeePage({ params }: Props) {
       duration: 3,
     });
   }, [isError, error]);
+
+  const { employee, contracts, payslips } = useEmployeeDetail({
+    siteId: Number(params.siteId),
+    employeeId: selectedEmployeeId,
+  });
+
+  const { pdfUrl } = useEmployeeDocumentPdf({
+    type: openDocument?.type ?? null,
+    id: openDocument?.id ?? null,
+    enabled: Boolean(openDocument),
+  });
 
   const handleSearchSubmit = () => {
     setPage(1);
@@ -153,16 +176,50 @@ export default function CompanyEmployeePage({ params }: Props) {
             pageSize={pageSize}
             total={totalRecords}
             onPageChange={(newPage) => setPage(newPage)}
-            onOpenDetail={(employee) => setSelectedEmployee(employee)}
+            onOpenDetail={(employeeId) => setSelectedEmployeeId(employeeId)}
           />
         </section>
       </div>
 
-      <EmployeeDetailModal
-        open={Boolean(selectedEmployee)}
-        onClose={() => setSelectedEmployee(null)}
-        employee={selectedEmployee}
-        siteName={currentSite?.siteName}
+      {selectedEmployeeId !== null && (
+        <EmployeeDetailModal
+          open={selectedEmployeeId !== null}
+          onClose={() => setSelectedEmployeeId(null)}
+          employee={employee ?? null}
+          contracts={contracts}
+          payslips={payslips}
+          siteName={currentSite?.siteName}
+          onOpenContract={(contract: EmployeeContractDocument) =>
+            setOpenDocument({
+              type: "contract",
+              id: contract.id,
+              createdAt: contract.createdAt,
+            })
+          }
+          onOpenPayslip={(payslip: EmployeePayslipDocument) =>
+            setOpenDocument({
+              type: "payslip",
+              id: payslip.id,
+              createdAt: payslip.createdAt,
+            })
+          }
+        />
+      )}
+
+      <SafetyDocumentModal
+        open={Boolean(openDocument)}
+        onClose={() => setOpenDocument(null)}
+        title={openDocument?.type === "contract" ? "근로계약서" : "급여명세서"}
+        subtitle={
+          openDocument ? `${currentSite?.siteName ?? ""} | ${openDocument.createdAt}` : undefined
+        }
+        pdfUrl={pdfUrl}
+        zIndex={2000}
+        onDownload={() => {
+          if (pdfUrl) {
+            window.open(pdfUrl, "_blank");
+          }
+        }}
       />
     </div>
   );
