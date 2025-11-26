@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Modal } from "antd";
+import { Modal, notification } from "antd";
 
 import { Button } from "@/components/ui/Button/button";
 import { Input } from "@/components/ui/Input/input";
@@ -104,6 +104,15 @@ export function SiteCreateModal({ open, onCancel, onSubmit }: SiteCreateModalPro
     try {
       setSubmitting(true);
       await Promise.resolve(onSubmit(values));
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "현장 등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      notification.error({
+        message: "현장 등록 실패",
+        description: message,
+      });
     } finally {
       setSubmitting(false);
     }
