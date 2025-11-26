@@ -1,11 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { SidebarLayout } from "@/components/common/SidebarNavigation/sidebar-layout";
 import type { SidebarMenuItem } from "@/components/common/SidebarNavigation/sidebar-navigation";
+import {
+  SiteCreateModal,
+  type SiteFormValues,
+} from "@/components/features/company/site/site-create-modal";
+import { SiteSecretKeyModal } from "@/components/features/company/site/site-secret-key-modal";
 import { useCompanySites } from "@/hooks/use-company-sites";
 
 const BuildingIcon = ({ className }: { className?: string }) => (
@@ -38,12 +43,23 @@ type Props = {
   };
 };
 
+type SiteSecretKeyInfo = {
+  managerKey: string;
+  workerKey: string;
+  createdAt?: string;
+  createdBy?: string;
+};
+
 export default function CompanySiteLayout({ children, params }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { data, isLoading, refetch } = useCompanySites();
   const sites = useMemo(() => data?.sites ?? [], [data]);
   const currentSiteId = params.siteId;
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSecretKeyModalOpen, setIsSecretKeyModalOpen] = useState(false);
+  const [secretKeyInfo, setSecretKeyInfo] = useState<SiteSecretKeyInfo | null>(null);
 
   const pathSegments = pathname?.split("/").filter(Boolean) ?? [];
   const currentSection = pathSegments[2] ?? "dashboard";
@@ -83,17 +99,80 @@ export default function CompanySiteLayout({ children, params }: Props) {
     });
   }, [sites, currentSection, currentSiteId, isLoading]);
 
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleSubmitCreateSite = async (values: SiteFormValues) => {
+    // TODO: 실제 현장 생성 API 연동 시 values를 활용하여 요청 바디 구성
+    void values;
+    const now = new Date();
+    const formattedDate = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(
+      now.getDate(),
+    ).padStart(2, "0")}`;
+
+    setSecretKeyInfo({
+      managerKey: "BUILDP-2039-XYZ-9205",
+      workerKey: "BUILDP-2039-XYZ-2057",
+      createdAt: formattedDate,
+      // TODO: 세션 정보에서 실제 로그인한 사용자 이메일 읽어오기
+      createdBy: "관리자 계정 (admin@build-up.kr)",
+    });
+
+    setIsCreateModalOpen(false);
+    setIsSecretKeyModalOpen(true);
+    refetch();
+  };
+
+  const handleCloseSecretKeyModal = () => {
+    setIsSecretKeyModalOpen(false);
+  };
+
+  const handleGoToMain = () => {
+    setIsSecretKeyModalOpen(false);
+    if (currentSiteId) {
+      router.push(`/company/${currentSiteId}/dashboard`);
+    }
+  };
+
+  const handleGoToSiteList = () => {
+    setIsSecretKeyModalOpen(false);
+  };
+
   return (
-    <SidebarLayout
-      menuItems={menuItems}
-      bottomAction={{
-        label: "현장 추가",
-        onClick: () => refetch(),
-      }}
-      searchPlaceholder="현장명 또는 담당자를 검색하세요"
-      logoHref={`/company/${currentSiteId ?? ""}/dashboard`}
-    >
-      {children}
-    </SidebarLayout>
+    <>
+      <SidebarLayout
+        menuItems={menuItems}
+        bottomAction={{
+          label: "현장 추가",
+          onClick: handleOpenCreateModal,
+        }}
+        searchPlaceholder="현장명 또는 담당자를 검색하세요"
+        logoHref={`/company/${currentSiteId ?? ""}/dashboard`}
+      >
+        {children}
+      </SidebarLayout>
+
+      <SiteCreateModal
+        open={isCreateModalOpen}
+        onCancel={handleCloseCreateModal}
+        onSubmit={handleSubmitCreateSite}
+      />
+
+      <SiteSecretKeyModal
+        open={isSecretKeyModalOpen}
+        onClose={handleCloseSecretKeyModal}
+        managerKey={secretKeyInfo?.managerKey ?? ""}
+        workerKey={secretKeyInfo?.workerKey ?? ""}
+        createdAt={secretKeyInfo?.createdAt}
+        createdBy={secretKeyInfo?.createdBy}
+        onGoToMain={handleGoToMain}
+        onGoToSiteList={handleGoToSiteList}
+      />
+    </>
   );
 }
