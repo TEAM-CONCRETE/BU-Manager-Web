@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { notification } from "antd";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   InlineDateFilters,
@@ -13,7 +14,11 @@ import { SafetyWorkTable } from "@/components/features/company/safety/safety-wor
 import { buildCompanyNavItems } from "@/constants/company-nav";
 import { useCompanySites } from "@/hooks/use-company-sites";
 import { useSafetyWorkRecords } from "@/hooks/use-safety-work-records";
-import type { SafetyWorkRecord } from "@/lib/api/get-safety-work-records";
+import {
+  getSafetyEducationLogPdfUrl,
+  getWorkReportPdfUrl,
+  type SafetyWorkRecord,
+} from "@/lib/api/get-safety-work-records";
 
 type Props = {
   params: {
@@ -107,6 +112,31 @@ export default function CompanySafetyPage({ params }: Props) {
   const [openDiaryRecord, setOpenDiaryRecord] = useState<SafetyWorkRecord | null>(null);
   const [openWorkReportRecord, setOpenWorkReportRecord] = useState<SafetyWorkRecord | null>(null);
 
+  // 안전교육일지 PDF URL 가져오기
+  const { data: safetyDiaryPdfUrl } = useQuery({
+    queryKey: [
+      "safety-education-log-pdf",
+      params.siteId,
+      openDiaryRecord?.safetyEducationLog?.logId,
+    ],
+    queryFn: () =>
+      getSafetyEducationLogPdfUrl(
+        Number(params.siteId),
+        openDiaryRecord!.safetyEducationLog!.logId,
+      ),
+    enabled: Boolean(openDiaryRecord?.safetyEducationLog?.logId),
+    staleTime: 1000 * 60 * 5, // 5분
+  });
+
+  // 작업일보 PDF URL 가져오기
+  const { data: workReportPdfUrl } = useQuery({
+    queryKey: ["work-report-pdf", params.siteId, openWorkReportRecord?.workReport?.workReportId],
+    queryFn: () =>
+      getWorkReportPdfUrl(Number(params.siteId), openWorkReportRecord!.workReport!.workReportId),
+    enabled: Boolean(openWorkReportRecord?.workReport?.workReportId),
+    staleTime: 1000 * 60 * 5, // 5분
+  });
+
   return (
     <div className="min-h-full bg-bg-page px-4 py-6 dark:bg-dark-bg-page sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-4">
@@ -178,10 +208,10 @@ export default function CompanySafetyPage({ params }: Props) {
         subtitle={
           openDiaryRecord ? `${currentSite?.siteName ?? ""} | ${openDiaryRecord.date}` : undefined
         }
-        pdfUrl={openDiaryRecord?.safetyDiaryUrl}
+        pdfUrl={safetyDiaryPdfUrl}
         onDownload={() => {
-          if (openDiaryRecord?.safetyDiaryUrl) {
-            window.open(openDiaryRecord.safetyDiaryUrl, "_blank");
+          if (safetyDiaryPdfUrl) {
+            window.open(safetyDiaryPdfUrl, "_blank");
           }
         }}
       />
@@ -195,10 +225,10 @@ export default function CompanySafetyPage({ params }: Props) {
             ? `${currentSite?.siteName ?? ""} | ${openWorkReportRecord.date}`
             : undefined
         }
-        pdfUrl={openWorkReportRecord?.workReportUrl}
+        pdfUrl={workReportPdfUrl}
         onDownload={() => {
-          if (openWorkReportRecord?.workReportUrl) {
-            window.open(openWorkReportRecord.workReportUrl, "_blank");
+          if (workReportPdfUrl) {
+            window.open(workReportPdfUrl, "_blank");
           }
         }}
       />

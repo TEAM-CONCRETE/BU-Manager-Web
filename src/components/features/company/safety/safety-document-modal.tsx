@@ -21,7 +21,7 @@ export function SafetyDocumentModal({
   title,
   subtitle,
   pdfUrl,
-  downloadLabel = "다운로드",
+  downloadLabel = "새 창에서 열기",
   onDownload,
 }: SafetyDocumentModalProps) {
   const handleDownload = () => {
@@ -54,7 +54,7 @@ export function SafetyDocumentModal({
       }}
     >
       <div className="flex flex-col gap-4">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between mr-8">
           <div>
             <p className="!mb-0 text-2xl font-semibold text-brand-primary-strong">{title}</p>
             {subtitle && <p className="!mb-0 text-sm text-text-subtle">{subtitle}</p>}

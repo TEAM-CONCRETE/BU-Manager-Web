@@ -61,23 +61,6 @@ export function PDFViewer({ pdfUrl }: PDFViewerProps) {
           />
         )}
       </div>
-      <div className="flex items-center justify-center gap-2 text-sm text-text-subtle">
-        <Button variant="ghost" size="sm" onClick={() => window.open(pdfUrl, "_blank")}>
-          새 창에서 열기
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            const link = document.createElement("a");
-            link.href = pdfUrl;
-            link.download = "document.pdf";
-            link.click();
-          }}
-        >
-          다운로드
-        </Button>
-      </div>
     </div>
   );
 }
