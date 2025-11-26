@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal } from "antd";
 
 import { Button } from "@/components/ui/Button/button";
@@ -32,6 +32,12 @@ export function SiteCreateModal({ open, onCancel, onSubmit }: SiteCreateModalPro
   });
   const [errors, setErrors] = useState<SiteFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      resetState();
+    }
+  }, [open]);
 
   const resetState = () => {
     setValues({
