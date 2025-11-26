@@ -1,8 +1,21 @@
 "use client";
 
 import { KPICard } from "@/components/features/company/dashboard/kpi-card";
+import type { PendingContract } from "@/types/dashboard";
 
-export function LaborKpiCard() {
+type LaborKpiCardProps = {
+  totalPendingContracts: number;
+  pendingContracts: PendingContract[];
+};
+
+export function LaborKpiCard({ totalPendingContracts, pendingContracts }: LaborKpiCardProps) {
+  const items =
+    pendingContracts.length > 0
+      ? pendingContracts.map((contract) => ({
+          label: `[ ${contract.contractType} ] ${contract.targetName}`,
+        }))
+      : [{ label: "미결 전자계약이 없습니다." }];
+
   return (
     <KPICard
       title="노무 현황 (KPI)"
@@ -10,14 +23,10 @@ export function LaborKpiCard() {
       highlight={{
         label: "미결 전자계약",
         description: "처리 필요",
-        value: "7건",
-        variant: "danger",
+        value: `${totalPendingContracts}건`,
+        variant: totalPendingContracts > 0 ? "danger" : "success",
       }}
-      items={[
-        { label: "[ 근로계약서 ] 박승희" },
-        { label: "[ 근로계약서 ] 김세원" },
-        { label: "[ 근로계약서 ] 문현민" },
-      ]}
+      items={items}
     />
   );
 }
