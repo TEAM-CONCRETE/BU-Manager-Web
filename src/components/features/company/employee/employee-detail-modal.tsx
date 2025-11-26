@@ -77,7 +77,7 @@ export function EmployeeDetailModal({
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-text-subtle">구분</span>
                   <span className="text-base font-medium text-brand-primary-strong">
-                    {employee?.employmentType === "REGULAR" ? "상용직" : "일용직"}
+                    {employee ? (employee.employmentType === "REGULAR" ? "상용직" : "일용직") : "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
