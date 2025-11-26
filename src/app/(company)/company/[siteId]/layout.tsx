@@ -1,12 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { SidebarLayout } from "@/components/common/SidebarNavigation/sidebar-layout";
 import type { SidebarMenuItem } from "@/components/common/SidebarNavigation/sidebar-navigation";
+import {
+  SiteCreateModal,
+  type SiteFormValues,
+} from "@/components/features/company/site/site-create-modal";
+import { SiteSecretKeyModal } from "@/components/features/company/site/site-secret-key-modal";
 import { useCompanySites } from "@/hooks/use-company-sites";
+import { useCreateSite } from "@/hooks/use-create-site";
+import { useSessionStore } from "@/stores/session-store";
+import { formatTodayAsYyyyMmDdDot } from "@/utils/date";
 
 const BuildingIcon = ({ className }: { className?: string }) => (
   <svg
@@ -38,12 +46,25 @@ type Props = {
   };
 };
 
+type SiteSecretKeyInfo = {
+  managerKey: string;
+  workerKey: string;
+  createdAt?: string;
+  createdBy?: string;
+};
+
 export default function CompanySiteLayout({ children, params }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const { data, isLoading, refetch } = useCompanySites();
+  const createSiteMutation = useCreateSite();
+  const user = useSessionStore((state) => state.user);
   const sites = useMemo(() => data?.sites ?? [], [data]);
   const currentSiteId = params.siteId;
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isSecretKeyModalOpen, setIsSecretKeyModalOpen] = useState(false);
+  const [secretKeyInfo, setSecretKeyInfo] = useState<SiteSecretKeyInfo | null>(null);
 
   const pathSegments = pathname?.split("/").filter(Boolean) ?? [];
   const currentSection = pathSegments[2] ?? "dashboard";
@@ -83,17 +104,74 @@ export default function CompanySiteLayout({ children, params }: Props) {
     });
   }, [sites, currentSection, currentSiteId, isLoading]);
 
+  const handleOpenCreateModal = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleCloseCreateModal = () => {
+    setIsCreateModalOpen(false);
+  };
+
+  const handleSubmitCreateSite = async (values: SiteFormValues) => {
+    const created = await createSiteMutation.mutateAsync(values);
+
+    setSecretKeyInfo({
+      managerKey: created.managerSecretKey,
+      workerKey: created.employeeSecretKey,
+      createdAt: formatTodayAsYyyyMmDdDot(),
+      createdBy: user?.name ? `${user.name}` : undefined,
+    });
+
+    setIsCreateModalOpen(false);
+    setIsSecretKeyModalOpen(true);
+    refetch();
+  };
+
+  const handleCloseSecretKeyModal = () => {
+    setIsSecretKeyModalOpen(false);
+  };
+
+  const handleGoToMain = () => {
+    setIsSecretKeyModalOpen(false);
+    if (currentSiteId) {
+      router.push(`/company/${currentSiteId}/dashboard`);
+    }
+  };
+
+  const handleGoToSiteList = () => {
+    setIsSecretKeyModalOpen(false);
+  };
+
   return (
-    <SidebarLayout
-      menuItems={menuItems}
-      bottomAction={{
-        label: "현장 추가",
-        onClick: () => refetch(),
-      }}
-      searchPlaceholder="현장명 또는 담당자를 검색하세요"
-      logoHref={`/company/${currentSiteId ?? ""}/dashboard`}
-    >
-      {children}
-    </SidebarLayout>
+    <>
+      <SidebarLayout
+        menuItems={menuItems}
+        bottomAction={{
+          label: "현장 추가",
+          onClick: handleOpenCreateModal,
+        }}
+        searchPlaceholder="현장명 또는 담당자를 검색하세요"
+        logoHref={`/company/${currentSiteId ?? ""}/dashboard`}
+      >
+        {children}
+      </SidebarLayout>
+
+      <SiteCreateModal
+        open={isCreateModalOpen}
+        onCancel={handleCloseCreateModal}
+        onSubmit={handleSubmitCreateSite}
+      />
+
+      <SiteSecretKeyModal
+        open={isSecretKeyModalOpen}
+        onClose={handleCloseSecretKeyModal}
+        managerKey={secretKeyInfo?.managerKey ?? ""}
+        workerKey={secretKeyInfo?.workerKey ?? ""}
+        createdAt={secretKeyInfo?.createdAt}
+        createdBy={secretKeyInfo?.createdBy}
+        onGoToMain={handleGoToMain}
+        onGoToSiteList={handleGoToSiteList}
+      />
+    </>
   );
 }
