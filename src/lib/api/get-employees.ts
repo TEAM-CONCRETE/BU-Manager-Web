@@ -88,8 +88,10 @@ type EmployeePayslipsApiResponse =
       data?: EmployeePayslipsApiPayload;
     };
 
-function mapEmploymentTypeToQuery(type: EmploymentType): "DAILY" | "PERMANENT" {
-  return type === "REGULAR" ? "PERMANENT" : "DAILY";
+function mapEmploymentTypeToQuery(type: EmploymentType): "DAILY" | "PERMANENT" | null {
+  if (type === "REGULAR") return "PERMANENT";
+  if (type === "DAILY") return "DAILY";
+  return null;
 }
 
 function mapEmploymentTypeFromApi(empType: string): EmploymentType {
@@ -108,7 +110,10 @@ export async function getEmployeeList(
   });
 
   if (params.employmentType) {
-    queryParams.set("empType", mapEmploymentTypeToQuery(params.employmentType));
+    const mappedType = mapEmploymentTypeToQuery(params.employmentType);
+    if (mappedType !== null) {
+      queryParams.set("empType", mappedType);
+    }
   }
 
   if (params.searchKeyword) {
