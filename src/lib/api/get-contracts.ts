@@ -13,6 +13,7 @@ export type EmpType = "PERMANENT" | "DAILY" | "UNCONTRACTED";
 export type ContractItem = {
   contractId: number;
   employeeId: number;
+  userId: string;
   employeeName: string;
   employeeResidentNumber: string | null;
   employeePhone?: string | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Input, notification } from "antd";
 import {
   ManagerContractsTable,
@@ -22,6 +22,7 @@ type ContractEmploymentFilter = EmploymentFilterValue;
 
 export default function ManagerContractsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const user = useSessionStore((state) => state.user);
   const parsedSiteId = user?.siteId ?? 0;
   const hasValidSiteId = !!parsedSiteId && !Number.isNaN(parsedSiteId);
@@ -64,6 +65,7 @@ export default function ManagerContractsPage() {
       id: item.contractId ?? item.employeeId,
       contractId: item.contractId,
       employeeId: item.employeeId,
+      employeeUserId: item.userId,
       name: item.employeeName,
       residentNumber: item.employeeResidentNumber ?? "",
       employmentType:
@@ -114,6 +116,26 @@ export default function ManagerContractsPage() {
 
   const { data: pdfUrl } = useContractPdf(selectedContractId, Boolean(selectedContractId));
 
+  // 작성 완료 후 돌아온 경우, 생성된 계약서 현황 모달 자동 오픈
+  useEffect(() => {
+    const createdIdParam = searchParams.get("createdContractId");
+    if (!createdIdParam || !contractsData) return;
+
+    const createdId = Number(createdIdParam);
+    if (Number.isNaN(createdId)) return;
+
+    // contractsData 로딩 이후에만 모달 오픈
+    const exists = contractsData.items.some((item) => item.contractId === createdId);
+    if (!exists) return;
+
+    setSelectedContractId(createdId);
+
+    const cleaned = new URLSearchParams(Array.from(searchParams.entries()));
+    cleaned.delete("createdContractId");
+    const queryString = cleaned.toString();
+    router.replace(queryString ? `/manager/contracts?${queryString}` : "/manager/contracts");
+  }, [searchParams, contractsData]);
+
   const handleSearchSubmit = (value: string) => {
     const keyword = value.trim() || undefined;
     setAppliedKeyword(keyword);
@@ -135,6 +157,9 @@ export default function ManagerContractsPage() {
     }
     if (createTarget.name) {
       searchParams.set("employeeName", createTarget.name);
+    }
+    if (createTarget.employeeUserId) {
+      searchParams.set("userId", createTarget.employeeUserId);
     }
 
     router.push(`/manager/contracts/create?${searchParams.toString()}`);

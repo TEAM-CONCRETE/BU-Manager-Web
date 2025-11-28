@@ -9,6 +9,7 @@ import { formatPhone } from "@/utils/phone";
 export type ManagerContractsRow = {
   id: number;
   employeeId?: number;
+  employeeUserId?: string;
   contractId?: number;
   name: string;
   residentNumber: string;

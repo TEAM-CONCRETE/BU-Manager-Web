@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
-import { Checkbox, DatePicker, Input, Radio, TimePicker } from "antd";
-import { useSearchParams } from "next/navigation";
+import { Checkbox, DatePicker, Input, Radio, TimePicker, notification } from "antd";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useContractInfo } from "@/hooks/use-contract-info";
+import { useCreateContract } from "@/hooks/use-create-contract";
 import { useSessionStore } from "@/stores/session-store";
 
 const weekdayLabels = [
@@ -59,9 +60,11 @@ function getWeekdayKey(date: Date): WeekdayKey {
 const { RangePicker } = DatePicker;
 
 export default function ManagerContractCreatePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const empType = searchParams.get("empType");
   const employeeName = searchParams.get("employeeName");
+  const employeeUserId = searchParams.get("userId");
   const user = useSessionStore((state) => state.user);
   const parsedSiteId = user?.siteId != null ? Number(user.siteId) : null;
   const hasValidSiteId = parsedSiteId != null && !Number.isNaN(parsedSiteId);
@@ -69,6 +72,10 @@ export default function ManagerContractCreatePage() {
   const { data: contractInfoData } = useContractInfo(parsedSiteId, { enabled: hasValidSiteId });
 
   const isPermanent = empType === "PERMANENT";
+  const createContractMutation = useCreateContract(
+    parsedSiteId,
+    isPermanent ? "PERMANENT" : "DAILY",
+  );
 
   const [basicInfo, setBasicInfo] = useState({
     employerName: "",
@@ -186,6 +193,110 @@ export default function ManagerContractCreatePage() {
     }));
   }, [contractInfoData]);
 
+  const handleSave = async () => {
+    if (!employeeUserId) {
+      notification.error({
+        message: "근로자 계정 정보(userId)를 불러오지 못했습니다. 다시 시도해주세요.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    if (!user || !parsedSiteId) {
+      notification.error({
+        message: "로그인 정보 또는 현장 정보가 없습니다.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    try {
+      const firstDayKey = activeWeekdays[0];
+      const firstSchedule = schedule[firstDayKey];
+
+      const startTime = (firstSchedule?.startTime || DEFAULT_START_TIME) + ":00";
+      const endTime = (firstSchedule?.endTime || DEFAULT_END_TIME) + ":00";
+
+      const breakHours = parseFloat(firstSchedule?.breakTime || "1");
+      const totalBreakMinutes = Number.isNaN(breakHours) ? 60 : Math.round(breakHours * 60);
+      const breakStartMinutes = 12 * 60;
+      const breakEndMinutes = breakStartMinutes + totalBreakMinutes;
+      const breakEndHour = Math.floor(breakEndMinutes / 60)
+        .toString()
+        .padStart(2, "0");
+      const breakEndMinute = (breakEndMinutes % 60).toString().padStart(2, "0");
+
+      const workOnDays = activeWeekdays
+        .filter((key) => schedule[key].enabled)
+        .map((key) => weekdayLabels.find((item) => item.key === key)?.label[0] ?? key)
+        .join(", ");
+
+      const workOffDays = activeWeekdays
+        .filter((key) => !schedule[key].enabled)
+        .map((key) => weekdayLabels.find((item) => item.key === key)?.label[0] ?? key)
+        .join(", ");
+
+      const parseMoney = (value: string) => {
+        const digits = value.replace(/[^\d]/g, "");
+        return digits ? Number(digits) : 0;
+      };
+
+      const payPeriod =
+        payInfo.payCycle === "weekly"
+          ? "WEEKLY"
+          : payInfo.payCycle === "daily"
+            ? "DAILY"
+            : "MONTHLY";
+
+      const payType = payInfo.payMethod === "cash" ? "CASH" : "TRANSFER";
+
+      const payload = {
+        userId: employeeUserId,
+        role: "현장 관리자",
+        empType: isPermanent ? "PERMANENT" : "DAILY",
+        employeeStartDate: contractInfo.startDate.replace(/\./g, "-"),
+        employeeEndDate: contractInfo.endDate.replace(/\./g, "-"),
+        details: {
+          workPlace: contractInfo.workplace,
+          workType: contractInfo.jobType || "일반건설현장근로자",
+          workStartTime: startTime,
+          workEndTime: endTime,
+          breakStartTime: "12:00:00",
+          breakEndTime: `${breakEndHour}:${breakEndMinute}:00`,
+          workOnDays,
+          workOffDays,
+          workPay: parseMoney(wageInfo.baseWage),
+          additionalHourPay: parseMoney(wageInfo.overtimeAllowance),
+          additionalNightPay: parseMoney(wageInfo.nightAllowance),
+          additionalHolidayPay: parseMoney(wageInfo.holidayAllowance),
+          payDay: Number(payInfo.payDate) || 0,
+          payPeriod,
+          payType,
+          isEoiApplicable: payInfo.socialInsurances.includes("고용보험"),
+          isWciApplicable: payInfo.socialInsurances.includes("산재보험"),
+          isNpsApplicable: payInfo.socialInsurances.includes("국민연금"),
+          isNhiApplicable: payInfo.socialInsurances.includes("건강보험"),
+        },
+      } as const;
+
+      const contractId = await createContractMutation.mutateAsync(payload);
+
+      notification.success({
+        message: "근로계약서가 저장되었습니다.",
+        placement: "topRight",
+      });
+
+      router.push(`/manager/contracts?createdContractId=${contractId}`);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "근로계약서를 저장하는 중 오류가 발생했습니다.";
+      notification.error({
+        message,
+        placement: "topRight",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
       <header className="space-y-1">
@@ -199,7 +310,7 @@ export default function ManagerContractCreatePage() {
         </p>
       </header>
 
-      <section className="rounded-2xl border border-border bg-bg-surface px-6 py-5 space-y-4">
+      <section className="rounded-2xl border border-border bg-bg-surface px-6 py-5 space-y-4 mb-4">
         <div>
           <p className="mb-1! text-sm font-semibold text-text-strong">기본 정보</p>
           <p className="mb-0! text-xs text-text-subtle">
@@ -504,6 +615,23 @@ export default function ManagerContractCreatePage() {
           </Checkbox.Group>
         </div>
       </section>
+      <div className="flex justify-end gap-3 px-6 pb-8">
+        <button
+          type="button"
+          className="h-11 rounded-xl border border-border px-5 text-sm font-medium text-text-subtle hover:bg-bg-subtle"
+          onClick={() => router.push("/manager/contracts")}
+        >
+          취소
+        </button>
+        <button
+          type="button"
+          className="h-11 rounded-xl bg-brand-primary px-5 text-sm font-semibold text-white! hover:bg-brand-primary-strong disabled:opacity-60 disabled:cursor-not-allowed"
+          onClick={handleSave}
+          disabled={createContractMutation.isPending}
+        >
+          {createContractMutation.isPending ? "저장 중..." : "계약서 저장하기"}
+        </button>
+      </div>
     </div>
   );
 }
