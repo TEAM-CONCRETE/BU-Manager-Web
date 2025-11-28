@@ -119,14 +119,10 @@ export default function ManagerContractsPage() {
   // 작성 완료 후 돌아온 경우, 생성된 계약서 현황 모달 자동 오픈
   useEffect(() => {
     const createdIdParam = searchParams.get("createdContractId");
-    if (!createdIdParam || !contractsData) return;
+    if (!createdIdParam) return;
 
     const createdId = Number(createdIdParam);
     if (Number.isNaN(createdId)) return;
-
-    // contractsData 로딩 이후에만 모달 오픈
-    const exists = contractsData.items.some((item) => item.contractId === createdId);
-    if (!exists) return;
 
     setSelectedContractId(createdId);
 
@@ -134,7 +130,7 @@ export default function ManagerContractsPage() {
     cleaned.delete("createdContractId");
     const queryString = cleaned.toString();
     router.replace(queryString ? `/manager/contracts?${queryString}` : "/manager/contracts");
-  }, [searchParams, contractsData]);
+  }, [searchParams, router]);
 
   const handleSearchSubmit = (value: string) => {
     const keyword = value.trim() || undefined;
@@ -271,6 +267,10 @@ export default function ManagerContractsPage() {
           if (pdfUrl) {
             window.open(pdfUrl, "_blank");
           }
+        }}
+        onSignatureSuccess={() => {
+          refetch();
+          setSelectedContractId(null);
         }}
       />
 

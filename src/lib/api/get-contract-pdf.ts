@@ -8,7 +8,7 @@ export type GetContractPdfApiResponse = {
 };
 
 export async function getContractPdfUrl(contractId: number): Promise<string> {
-  const response = await fetch(`/api/v1/documents/contracts/${contractId}`, {
+  const response = await fetch(`/api/documents/contracts/${contractId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
