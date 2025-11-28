@@ -15,6 +15,7 @@ export type ContractItem = {
   employeeId: number;
   employeeName: string;
   employeeResidentNumber: string | null;
+  employeePhone?: string | null;
   empType: EmpType;
   role: string;
   contractState: ContractState;
