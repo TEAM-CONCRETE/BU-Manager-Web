@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Input, notification } from "antd";
-import { ManagerContractsTable } from "@/components/features/manager/contracts/manager-contracts-table";
+import {
+  ManagerContractsTable,
+  type ManagerContractsRow,
+} from "@/components/features/manager/contracts/manager-contracts-table";
 import { ManagerContractViewModal } from "@/components/features/manager/contracts/manager-contract-view-modal";
+import { ManagerContractCreateTypeModal } from "@/components/features/manager/contracts/manager-contract-create-type-modal";
 import { useContractPdf } from "@/hooks/use-contract-pdf";
 import { useContracts } from "@/hooks/use-contracts";
 import { useSiteDetail } from "@/hooks/use-site-detail";
@@ -16,6 +21,7 @@ import {
 type ContractEmploymentFilter = EmploymentFilterValue;
 
 export default function ManagerContractsPage() {
+  const router = useRouter();
   const user = useSessionStore((state) => state.user);
   const parsedSiteId = user?.siteId ?? 0;
   const hasValidSiteId = !!parsedSiteId && !Number.isNaN(parsedSiteId);
@@ -75,6 +81,7 @@ export default function ManagerContractsPage() {
   const tableLoading = isLoading || isFetching;
 
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
+  const [createTarget, setCreateTarget] = useState<ManagerContractsRow | null>(null);
 
   const selectedContract =
     selectedContractId != null
@@ -115,6 +122,23 @@ export default function ManagerContractsPage() {
   const disabledMessage = !hasValidSiteId
     ? "현장 정보가 없어 근로계약서 데이터를 불러올 수 없습니다. 관리자에게 현장 정보 설정을 요청해주세요."
     : undefined;
+
+  const handleSelectCreateType = (type: "REGULAR" | "DAILY") => {
+    if (!createTarget) return;
+
+    const empTypeParam = type === "REGULAR" ? "PERMANENT" : "DAILY";
+    const searchParams = new URLSearchParams();
+    searchParams.set("empType", empTypeParam);
+    if (createTarget.employeeId != null) {
+      searchParams.set("employeeId", String(createTarget.employeeId));
+    }
+    if (createTarget.name) {
+      searchParams.set("employeeName", createTarget.name);
+    }
+
+    router.push(`/manager/contracts/create?${searchParams.toString()}`);
+    setCreateTarget(null);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -204,6 +228,7 @@ export default function ManagerContractsPage() {
               total={totalRecords}
               onPageChange={(newPage) => setPage(newPage)}
               onOpenContract={(contractId) => setSelectedContractId(contractId)}
+              onCreateContract={(record) => setCreateTarget(record)}
             />
           </>
         )}
@@ -221,6 +246,13 @@ export default function ManagerContractsPage() {
             window.open(pdfUrl, "_blank");
           }
         }}
+      />
+
+      <ManagerContractCreateTypeModal
+        open={createTarget != null}
+        onClose={() => setCreateTarget(null)}
+        employeeName={createTarget?.name}
+        onSelect={handleSelectCreateType}
       />
     </div>
   );

@@ -8,6 +8,7 @@ import { formatPhone } from "@/utils/phone";
 
 export type ManagerContractsRow = {
   id: number;
+  employeeId?: number;
   contractId?: number;
   name: string;
   residentNumber: string;
@@ -26,6 +27,7 @@ type ManagerContractsTableProps = {
   total?: number;
   onPageChange: (page: number) => void;
   onOpenContract: (contractId: number) => void;
+  onCreateContract: (record: ManagerContractsRow) => void;
 };
 
 const buttonClass = (enabled: boolean) =>
@@ -80,6 +82,7 @@ export function ManagerContractsTable({
   total,
   onPageChange,
   onOpenContract,
+  onCreateContract,
 }: ManagerContractsTableProps) {
   const columns: ColumnsType<ManagerContractsRow> = [
     {
@@ -152,7 +155,7 @@ export function ManagerContractsTable({
             <button
               type="button"
               onClick={() => {
-                // TODO: 작성 기능 구현 필요
+                onCreateContract(record);
               }}
               className={buttonClass(true)}
             >
