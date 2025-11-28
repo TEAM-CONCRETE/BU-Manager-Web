@@ -146,7 +146,6 @@ export function ManagerContractsTable({
         const empType = record.employmentType;
         const contractStatus = record.contractStatus;
 
-        // emp_type이 UNCONTRACTED면 작성 버튼 (contractId가 없을 수 있음)
         if (empType === "UNCONTRACTED") {
           return (
             <button
@@ -161,21 +160,11 @@ export function ManagerContractsTable({
           );
         }
 
-        // 그 외는 contract status 기준
-        const isDraft = !contractStatus || contractStatus === "DRAFT";
-        const isSigningPending =
-          contractStatus === "MANAGER_SIGNING_PENDING" ||
-          contractStatus === "EMPLOYEE_SIGNING_PENDING" ||
-          contractStatus === "SENT" ||
-          contractStatus === "ADMIN_SIGNED";
         const isFullySigned = contractStatus === "FULLY_SIGNED";
         const isTerminated = contractStatus === "TERMINATED" || contractStatus === "VOID";
 
         let label = "조회";
-        if (isDraft) label = "작성";
-        else if (isSigningPending) label = "조회";
-        else if (isFullySigned) label = "열람";
-        else if (isTerminated) label = "조회";
+        if (isFullySigned) label = "열람";
 
         const enabled = !isTerminated && record.contractId != null;
 
