@@ -26,13 +26,21 @@ type ScheduleEntry = {
   breakTime: string;
 };
 
+const DEFAULT_START_TIME = "09:00";
+const DEFAULT_END_TIME = "18:00";
+
 const defaultSchedule: Record<WeekdayKey, ScheduleEntry> = {
-  MON: { enabled: true, startTime: "08:30", endTime: "17:30", breakTime: "1" },
-  TUE: { enabled: true, startTime: "09:00", endTime: "18:00", breakTime: "1" },
-  WED: { enabled: true, startTime: "08:00", endTime: "16:00", breakTime: "1" },
+  MON: { enabled: true, startTime: DEFAULT_START_TIME, endTime: DEFAULT_END_TIME, breakTime: "1" },
+  TUE: { enabled: true, startTime: DEFAULT_START_TIME, endTime: DEFAULT_END_TIME, breakTime: "1" },
+  WED: { enabled: true, startTime: DEFAULT_START_TIME, endTime: DEFAULT_END_TIME, breakTime: "1" },
   THU: { enabled: false, startTime: "", endTime: "", breakTime: "1" },
-  FRI: { enabled: true, startTime: "08:30", endTime: "17:30", breakTime: "1" },
-  SAT: { enabled: true, startTime: "09:00", endTime: "15:00", breakTime: "0.5" },
+  FRI: { enabled: true, startTime: DEFAULT_START_TIME, endTime: DEFAULT_END_TIME, breakTime: "1" },
+  SAT: {
+    enabled: true,
+    startTime: DEFAULT_START_TIME,
+    endTime: DEFAULT_END_TIME,
+    breakTime: "0.5",
+  },
   SUN: { enabled: false, startTime: "", endTime: "", breakTime: "1" },
 };
 
@@ -128,13 +136,31 @@ export default function ManagerContractCreatePage() {
     field: keyof ScheduleEntry,
     value: string | boolean,
   ) => {
-    setSchedule((prev) => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [field]: field === "enabled" ? Boolean(value) : String(value),
-      },
-    }));
+    setSchedule((prev) => {
+      const current = prev[key];
+
+      if (field === "enabled") {
+        const enabled = Boolean(value);
+        // 근무를 켜는 순간 기본 출근/퇴근 시간을 채워준다.
+        return {
+          ...prev,
+          [key]: {
+            ...current,
+            enabled,
+            startTime: enabled && !current.startTime ? DEFAULT_START_TIME : current.startTime,
+            endTime: enabled && !current.endTime ? DEFAULT_END_TIME : current.endTime,
+          },
+        };
+      }
+
+      return {
+        ...prev,
+        [key]: {
+          ...current,
+          [field]: String(value),
+        },
+      };
+    });
   };
 
   const socialInsuranceOptions = ["고용보험", "산재보험", "국민연금", "건강보험"];
