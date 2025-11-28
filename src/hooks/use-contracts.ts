@@ -2,25 +2,28 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
-import { getEmployeeList } from "@/lib/api/get-employees";
-import type { GetEmployeeListParams, GetEmployeeListResponse } from "@/types/employee";
+import {
+  getContracts,
+  type GetContractsParams,
+  type GetContractsResponse,
+} from "@/lib/api/get-contracts";
 
-type UseEmployeesOptions = {
+type UseContractsOptions = {
   enabled?: boolean;
 };
 
-export function useEmployees(params: GetEmployeeListParams, options?: UseEmployeesOptions) {
-  return useQuery<GetEmployeeListResponse>({
+export function useContracts(params: GetContractsParams, options?: UseContractsOptions) {
+  return useQuery<GetContractsResponse>({
     queryKey: [
-      "employees",
+      "contracts",
       "list",
       params.siteId,
-      params.employmentType,
       params.page,
       params.size,
+      params.empType,
       params.searchKeyword,
     ],
-    queryFn: () => getEmployeeList(params),
+    queryFn: () => getContracts(params),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     refetchOnMount: false,

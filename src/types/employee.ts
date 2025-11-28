@@ -1,4 +1,4 @@
-export type EmploymentType = "REGULAR" | "DAILY";
+export type EmploymentType = "REGULAR" | "DAILY" | "UNCONTRACTED";
 
 export type EmployeeRecord = {
   id: number;
@@ -20,7 +20,16 @@ export type EmployeeDetail = {
   resignDate?: string;
 };
 
-export type EmployeeDocumentStatus = "DRAFT" | "ONGOING" | "COMPLETED" | string;
+export type EmployeeDocumentStatus =
+  | "DRAFT"
+  | "MANAGER_SIGNING_PENDING"
+  | "EMPLOYEE_SIGNING_PENDING"
+  | "SENT"
+  | "ADMIN_SIGNED"
+  | "FULLY_SIGNED"
+  | "TERMINATED"
+  | "VOID"
+  | string;
 
 export type EmployeeContractDocument = {
   id: number;
@@ -38,7 +47,7 @@ export type EmployeePayslipDocument = {
 
 export type GetEmployeeListParams = {
   siteId: number;
-  employmentType: EmploymentType;
+  employmentType?: EmploymentType;
   page: number;
   size: number;
   searchKeyword?: string;
