@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import dayjs, { type Dayjs } from "dayjs";
 import { Checkbox, DatePicker, Input, Radio, TimePicker } from "antd";
 import { useSearchParams } from "next/navigation";
+import { useContractInfo } from "@/hooks/use-contract-info";
+import { useSessionStore } from "@/stores/session-store";
 
 const weekdayLabels = [
   { key: "MON", label: "월요일" },
@@ -52,22 +54,27 @@ export default function ManagerContractCreatePage() {
   const searchParams = useSearchParams();
   const empType = searchParams.get("empType");
   const employeeName = searchParams.get("employeeName");
+  const user = useSessionStore((state) => state.user);
+  const parsedSiteId = user?.siteId != null ? Number(user.siteId) : null;
+  const hasValidSiteId = parsedSiteId != null && !Number.isNaN(parsedSiteId);
+  const today = dayjs().format("YYYY.MM.DD");
+  const { data: contractInfoData } = useContractInfo(parsedSiteId, { enabled: hasValidSiteId });
 
   const isPermanent = empType === "PERMANENT";
 
   const [basicInfo, setBasicInfo] = useState({
-    employerName: "현대건설",
-    employeeName: employeeName ?? "박승희",
-    writtenDate: "2025.09.10",
-    representativeName: "김현수",
-    address: "경기도 이천시 부발읍 하이닉스1로 21-1",
+    employerName: "",
+    employeeName: employeeName ?? "",
+    writtenDate: today,
+    representativeName: "",
+    address: "",
   });
 
   const [contractInfo, setContractInfo] = useState({
-    startDate: "2025.09.10",
-    endDate: "2025.09.15",
-    jobType: "목공",
-    workplace: "이천 A 아파트 공사 현장",
+    startDate: today,
+    endDate: today,
+    jobType: "",
+    workplace: "",
   });
 
   const [wageInfo, setWageInfo] = useState({
@@ -79,7 +86,7 @@ export default function ManagerContractCreatePage() {
   });
 
   const [payInfo, setPayInfo] = useState({
-    payDate: "10일",
+    payDate: "10",
     payCycle: "monthly",
     payMethod: "transfer",
     socialInsurances: ["고용보험", "산재보험"],
@@ -131,6 +138,27 @@ export default function ManagerContractCreatePage() {
   };
 
   const socialInsuranceOptions = ["고용보험", "산재보험", "국민연금", "건강보험"];
+
+  useEffect(() => {
+    setBasicInfo((prev) => ({
+      ...prev,
+      employeeName: employeeName ?? prev.employeeName,
+    }));
+  }, [employeeName]);
+
+  useEffect(() => {
+    if (!contractInfoData) return;
+    setBasicInfo((prev) => ({
+      ...prev,
+      employerName: contractInfoData.corporation?.corpName ?? prev.employerName,
+      representativeName: contractInfoData.corporation?.corpCeoName ?? prev.representativeName,
+      address: contractInfoData.corporation?.corpAddress ?? prev.address,
+    }));
+    setContractInfo((prev) => ({
+      ...prev,
+      workplace: contractInfoData.siteAddress ?? prev.workplace,
+    }));
+  }, [contractInfoData]);
 
   return (
     <div className="flex flex-col gap-6 px-6 py-6">
@@ -305,13 +333,15 @@ export default function ManagerContractCreatePage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <Input
-                          size="small"
-                          value={entry.breakTime}
-                          disabled={!entry.enabled}
-                          onChange={(e) => handleScheduleChange(key, "breakTime", e.target.value)}
-                          className="w-16"
-                        />
+                        <div className="w-20">
+                          <Input
+                            size="small"
+                            value={entry.breakTime}
+                            disabled={!entry.enabled}
+                            onChange={(e) => handleScheduleChange(key, "breakTime", e.target.value)}
+                            className="text-center"
+                          />
+                        </div>
                         <span className="text-xs text-text-subtle">시간</span>
                       </div>
                     </td>
@@ -399,7 +429,12 @@ export default function ManagerContractCreatePage() {
             <Input
               size="large"
               value={payInfo.payDate}
-              onChange={(e) => setPayInfo((prev) => ({ ...prev, payDate: e.target.value }))}
+              inputMode="numeric"
+              suffix="일"
+              onChange={(e) => {
+                const digitsOnly = e.target.value.replace(/\D/g, "");
+                setPayInfo((prev) => ({ ...prev, payDate: digitsOnly }));
+              }}
             />
           </div>
           <div>
