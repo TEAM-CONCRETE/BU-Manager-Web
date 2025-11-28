@@ -6,6 +6,12 @@ import type {
   SafetyWorkRecord,
 } from "@/types/safety-work";
 
+export type {
+  GetSafetyWorkRecordsParams,
+  GetSafetyWorkRecordsResponse,
+  SafetyWorkRecord,
+} from "@/types/safety-work";
+
 export async function getSafetyEducationLogPdfUrl(siteId: number, logId: number): Promise<string> {
   const response = await fetch(`/api/documents/safety-education-logs/${logId}`, {
     method: "GET",
