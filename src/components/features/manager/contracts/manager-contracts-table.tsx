@@ -4,8 +4,9 @@ import { Table } from "@/components/ui/Table/table";
 import { StatusPill } from "@/components/ui/StatusPill/status-pill";
 import type { ContractItem } from "@/lib/api/get-contracts";
 import { cn } from "@/utils/cn";
+import { formatPhone } from "@/utils/phone";
 
-type ManagerContractsRow = {
+export type ManagerContractsRow = {
   id: number;
   contractId?: number;
   name: string;
@@ -41,7 +42,7 @@ const employmentLabelMap: Record<ManagerContractsRow["employmentType"], string> 
   UNCONTRACTED: "-",
 };
 
-function mapStatusToLabelAndVariant(
+export function mapStatusToLabelAndVariant(
   empType: ManagerContractsRow["employmentType"],
   contractStatus?: ContractItem["contractState"] | null,
 ): { label: string; variant: Parameters<typeof StatusPill>[0]["variant"] } {
@@ -120,7 +121,7 @@ export function ManagerContractsTable({
       dataIndex: "phone",
       key: "phone",
       align: "center",
-      render: (value) => value ?? "-",
+      render: (value) => formatPhone(value),
     },
     {
       title: "현황",

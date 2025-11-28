@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Input, notification } from "antd";
 import { ManagerContractsTable } from "@/components/features/manager/contracts/manager-contracts-table";
-import { SafetyDocumentModal } from "@/components/features/company/safety/safety-document-modal";
+import { ManagerContractViewModal } from "@/components/features/manager/contracts/manager-contract-view-modal";
 import { useContractPdf } from "@/hooks/use-contract-pdf";
 import { useContracts } from "@/hooks/use-contracts";
 import { useSiteDetail } from "@/hooks/use-site-detail";
@@ -68,13 +68,18 @@ export default function ManagerContractsPage() {
       contractStatus: item.contractState,
       joinDate: item.employeeStartDate,
       endDate: item.employeeEndDate,
-      phone: undefined, // API에 없음
+      phone: item.employeePhone ?? undefined,
     })) ?? [];
   const totalRecords = contractsData?.pagination.totalElements ?? 0;
   const totalCount = contractsData?.pagination.totalElements ?? 0;
   const tableLoading = isLoading || isFetching;
 
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
+
+  const selectedContract =
+    selectedContractId != null
+      ? (records.find((record) => record.contractId === selectedContractId) ?? null)
+      : null;
 
   const lastErrorMessageRef = useRef<string | null>(null);
 
@@ -204,14 +209,14 @@ export default function ManagerContractsPage() {
         )}
       </section>
 
-      <SafetyDocumentModal
+      <ManagerContractViewModal
         open={Boolean(selectedContractId)}
         onClose={() => setSelectedContractId(null)}
-        title="근로계약서"
-        subtitle={siteDetail?.siteName}
+        contract={selectedContract}
+        siteName={siteDetail?.siteName}
         pdfUrl={pdfUrl ?? undefined}
         zIndex={2000}
-        onDownload={() => {
+        onOpenInNewWindow={() => {
           if (pdfUrl) {
             window.open(pdfUrl, "_blank");
           }
