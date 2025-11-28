@@ -61,8 +61,9 @@ export default function ManagerContractsPage() {
 
   const records =
     contractsData?.items.map((item) => ({
-      id: item.contractId, // 각 행은 계약서를 나타내므로 contractId를 고유 키로 사용
+      id: item.contractId ?? item.employeeId,
       contractId: item.contractId,
+      employeeId: item.employeeId,
       name: item.employeeName,
       residentNumber: item.employeeResidentNumber ?? "",
       employmentType:
