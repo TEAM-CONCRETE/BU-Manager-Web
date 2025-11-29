@@ -111,6 +111,7 @@ export default function ManagerContractCreatePage() {
 
   const handleContractPeriodChange = (values: Dayjs[] | null) => {
     if (!values || values.length !== 2) return;
+    if (!values[0] || !values[1]) return;
     setContractInfo((prev) => ({
       ...prev,
       startDate: values[0].format("YYYY.MM.DD"),
