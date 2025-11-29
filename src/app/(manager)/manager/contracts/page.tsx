@@ -105,10 +105,6 @@ export default function ManagerContractsPage() {
     // 먼저 테이블 데이터에서 찾기
     const foundInRecords = records.find((record) => record.contractId === selectedContractId);
     if (foundInRecords) {
-      // 테이블 데이터를 찾으면 임시 데이터 초기화
-      if (tempContractData) {
-        setTempContractData(null);
-      }
       return foundInRecords;
     }
 
@@ -137,6 +133,16 @@ export default function ManagerContractsPage() {
     }
 
     return null;
+  }, [selectedContractId, records, tempContractData]);
+
+  // 테이블 데이터를 찾으면 임시 데이터 초기화 (side effect는 useEffect에서 처리)
+  useEffect(() => {
+    if (selectedContractId != null && tempContractData) {
+      const foundInRecords = records.find((record) => record.contractId === selectedContractId);
+      if (foundInRecords) {
+        setTempContractData(null);
+      }
+    }
   }, [selectedContractId, records, tempContractData]);
 
   const lastErrorMessageRef = useRef<string | null>(null);
