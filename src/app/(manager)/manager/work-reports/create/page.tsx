@@ -6,6 +6,7 @@ import { Input, Select, notification } from "antd";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button/button";
 import { useContractInfo } from "@/hooks/use-contract-info";
+import { useCreateWorkReport } from "@/hooks/use-create-work-report";
 import { useSiteDetail } from "@/hooks/use-site-detail";
 import { useSessionStore } from "@/stores/session-store";
 
@@ -37,6 +38,24 @@ export default function ManagerWorkReportCreatePage() {
 
   const { data: siteDetail } = useSiteDetail(parsedSiteId);
   const { data: contractInfo } = useContractInfo(parsedSiteId, { enabled: hasValidSiteId });
+
+  const createWorkReportMutation = useCreateWorkReport(parsedSiteId, {
+    onSuccess: () => {
+      notification.success({
+        message: "작업일보가 저장되었습니다.",
+        placement: "topRight",
+        duration: 3,
+      });
+      router.push("/manager/work-reports?created=true");
+    },
+    onError: (error) => {
+      notification.error({
+        message: error.message || "작업일보 저장 중 오류가 발생했습니다.",
+        placement: "topRight",
+        duration: 3,
+      });
+    },
+  });
 
   const today = dayjs().format("YYYY-MM-DD");
   const authorName = user?.name ? `${user.name} (${user.role ?? ""})` : "";
@@ -138,13 +157,41 @@ export default function ManagerWorkReportCreatePage() {
   };
 
   const handleSave = () => {
-    // TODO: API 연동
-    notification.success({
-      message: "작업일보가 저장되었습니다.",
-      placement: "topRight",
-      duration: 3,
+    // workSections 생성: workforceEntries와 workDetails를 매칭
+    const workSections = workforceEntries
+      .filter((entry) => entry.process && entry.todayCount > 0)
+      .map((entry) => {
+        const workDetail = workDetails.find((detail) => detail.process === entry.process);
+        return {
+          sectionName: entry.process,
+          employeeNum: entry.todayCount,
+          context: workDetail?.description || "",
+        };
+      });
+
+    // materials 생성
+    const materials = materialEntries
+      .filter((entry) => entry.name && entry.specification && entry.unit)
+      .map((entry) => ({
+        materialName: entry.name,
+        materialStandard: entry.specification,
+        materialUnit: entry.unit,
+      }));
+
+    // 유효성 검사
+    if (workSections.length === 0) {
+      notification.warning({
+        message: "인력 투입 현황을 입력해주세요.",
+        placement: "topRight",
+        duration: 3,
+      });
+      return;
+    }
+
+    createWorkReportMutation.mutate({
+      workSections,
+      materials,
     });
-    router.push("/manager/work-reports");
   };
 
   return (
@@ -448,8 +495,13 @@ export default function ManagerWorkReportCreatePage() {
         <Button variant="secondary" size="md" onClick={handleCancel}>
           취소
         </Button>
-        <Button variant="primary" size="md" onClick={handleSave}>
-          작업일보 저장
+        <Button
+          variant="primary"
+          size="md"
+          onClick={handleSave}
+          disabled={createWorkReportMutation.isPending}
+        >
+          {createWorkReportMutation.isPending ? "저장 중..." : "작업일보 저장"}
         </Button>
       </section>
     </div>
