@@ -282,7 +282,7 @@ export function ManagerContractViewModal({
           </div>
         </section>
 
-        {!contract?.corporationSignedAt && (
+        {!contract?.corporationSignedAt && !localCorporationSignedAt && (
           <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
             <p className="mb-0! text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
             <div className="flex h-40 flex-col gap-2 rounded-2xl border border-dashed border-border bg-bg-subtle px-4 py-3">
