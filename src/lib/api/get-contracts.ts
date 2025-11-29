@@ -11,10 +11,12 @@ export type ContractState =
 export type EmpType = "PERMANENT" | "DAILY" | "UNCONTRACTED";
 
 export type ContractItem = {
-  contractId: number;
+  contractId: number | null;
   employeeId: number;
+  userId: string;
   employeeName: string;
   employeeResidentNumber: string | null;
+  employeePhone?: string | null;
   empType: EmpType;
   role: string;
   contractState: ContractState;

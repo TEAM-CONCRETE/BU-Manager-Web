@@ -4,10 +4,13 @@ import { Table } from "@/components/ui/Table/table";
 import { StatusPill } from "@/components/ui/StatusPill/status-pill";
 import type { ContractItem } from "@/lib/api/get-contracts";
 import { cn } from "@/utils/cn";
+import { formatPhone } from "@/utils/phone";
 
-type ManagerContractsRow = {
-  id: number;
-  contractId?: number;
+export type ManagerContractsRow = {
+  id: string | number;
+  employeeId?: number;
+  employeeUserId?: string;
+  contractId?: number | null;
   name: string;
   residentNumber: string;
   employmentType: "REGULAR" | "DAILY" | "UNCONTRACTED";
@@ -15,6 +18,9 @@ type ManagerContractsRow = {
   joinDate?: string;
   endDate?: string;
   phone?: string;
+  writtenAt?: string | null;
+  corporationSignedAt?: string | null;
+  employeeSignedAt?: string | null;
 };
 
 type ManagerContractsTableProps = {
@@ -25,6 +31,7 @@ type ManagerContractsTableProps = {
   total?: number;
   onPageChange: (page: number) => void;
   onOpenContract: (contractId: number) => void;
+  onCreateContract: (record: ManagerContractsRow) => void;
 };
 
 const buttonClass = (enabled: boolean) =>
@@ -41,7 +48,7 @@ const employmentLabelMap: Record<ManagerContractsRow["employmentType"], string> 
   UNCONTRACTED: "-",
 };
 
-function mapStatusToLabelAndVariant(
+export function mapStatusToLabelAndVariant(
   empType: ManagerContractsRow["employmentType"],
   contractStatus?: ContractItem["contractState"] | null,
 ): { label: string; variant: Parameters<typeof StatusPill>[0]["variant"] } {
@@ -79,6 +86,7 @@ export function ManagerContractsTable({
   total,
   onPageChange,
   onOpenContract,
+  onCreateContract,
 }: ManagerContractsTableProps) {
   const columns: ColumnsType<ManagerContractsRow> = [
     {
@@ -120,7 +128,7 @@ export function ManagerContractsTable({
       dataIndex: "phone",
       key: "phone",
       align: "center",
-      render: (value) => value ?? "-",
+      render: (value) => formatPhone(value),
     },
     {
       title: "현황",
@@ -151,7 +159,7 @@ export function ManagerContractsTable({
             <button
               type="button"
               onClick={() => {
-                // TODO: 작성 기능 구현 필요
+                onCreateContract(record);
               }}
               className={buttonClass(true)}
             >
