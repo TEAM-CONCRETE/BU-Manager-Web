@@ -50,6 +50,7 @@ export function ManagerContractViewModal({
   const [localCorporationSignedAt, setLocalCorporationSignedAt] = useState<string | null>(null);
 
   const contractId = contract?.contractId;
+  const hasValidIds = siteId != null && contractId != null;
 
   // contract.corporationSignedAt이 업데이트되면 로컬 상태 초기화 (refetch 완료 후)
   useEffect(() => {
@@ -89,8 +90,8 @@ export function ManagerContractViewModal({
   }, [open]);
 
   const managerSignatureMutation = useManagerSignature({
-    siteId: siteId ?? 0,
-    contractId: contractId ?? 0,
+    siteId: hasValidIds ? siteId : 0,
+    contractId: hasValidIds ? contractId : 0,
   });
 
   // 계약서 작성 이력 생성
@@ -312,7 +313,7 @@ export function ManagerContractViewModal({
           </div>
         </section>
 
-        {!contract?.corporationSignedAt && !localCorporationSignedAt && (
+        {!contract?.corporationSignedAt && !localCorporationSignedAt && hasValidIds && (
           <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
             <p className="mb-0! text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
             <div className="flex h-40 flex-col gap-2 rounded-2xl border border-dashed border-border bg-bg-subtle px-4 py-3">

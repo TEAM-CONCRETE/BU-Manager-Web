@@ -16,6 +16,10 @@ type UseManagerSignatureParams = {
 export function useManagerSignature({ siteId, contractId }: UseManagerSignatureParams) {
   return useMutation({
     mutationFn: async (signatureDataURL: string) => {
+      if (!siteId || !contractId || siteId <= 0 || contractId <= 0) {
+        throw new Error("서명 처리에 필요한 정보가 유효하지 않습니다.");
+      }
+
       // 1. Presigned URL 발급
       const { uploadUrl, s3Key } = await getSignatureUploadUrl({
         resourceType: "CONTRACT",
