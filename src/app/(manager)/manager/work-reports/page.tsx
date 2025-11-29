@@ -183,13 +183,8 @@ export default function ManagerWorkReportsPage() {
         centered
         width={900}
         classNames={{
-          content: "bg-white",
+          content: "bg-white dark:bg-dark-bg-surface",
           body: "p-6",
-        }}
-        styles={{
-          content: {
-            backgroundColor: "#ffffff",
-          },
         }}
       >
         <div className="flex flex-col gap-4">
