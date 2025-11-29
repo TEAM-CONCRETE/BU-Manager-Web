@@ -57,7 +57,6 @@ export default function ManagerEmployeesPage() {
   );
 
   const records: EmployeeRecord[] = employeesData?.records ?? [];
-  const totalRecords = employeesData?.pagination.totalRecords ?? 0;
   const totalCount = employeesData?.summary.totalCount ?? 0;
   const tableLoading = isLoading || isFetching;
 
@@ -216,7 +215,7 @@ export default function ManagerEmployeesPage() {
               isLoading={tableLoading}
               currentPage={page}
               pageSize={pageSize}
-              total={totalRecords}
+              total={totalCount}
               onPageChange={(newPage) => setPage(newPage)}
               onViewDetail={handleViewDetail}
             />
