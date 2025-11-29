@@ -2,15 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Input, notification } from "antd";
+import { Modal } from "antd";
 import { ManagerEmployeesTable } from "@/components/features/manager/employees/manager-employees-table";
+import { ManagerEmployeeDetailModal } from "@/components/features/manager/employees/manager-employee-detail-modal";
 import {
   EmploymentTypeFilterChips,
   type EmploymentFilterValue,
 } from "@/components/features/manager/employment-type-filter-chips";
+import { PDFViewer } from "@/components/common/pdf-viewer";
+import { Button } from "@/components/ui/Button/button";
+import { useContractPdf } from "@/hooks/use-contract-pdf";
 import { useEmployees } from "@/hooks/use-employees";
+import { useEmployeeDetail } from "@/hooks/use-employee-detail";
 import { useSiteDetail } from "@/hooks/use-site-detail";
 import { useSessionStore } from "@/stores/session-store";
-import type { EmployeeRecord } from "@/types/employee";
+import type { EmployeeContractDocument, EmployeeRecord } from "@/types/employee";
 
 export default function ManagerEmployeesPage() {
   const user = useSessionStore((state) => state.user);
@@ -55,6 +61,19 @@ export default function ManagerEmployeesPage() {
   const totalCount = employeesData?.summary.totalCount ?? 0;
   const tableLoading = isLoading || isFetching;
 
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  const [selectedContract, setSelectedContract] = useState<EmployeeContractDocument | null>(null);
+
+  const { employee, contracts } = useEmployeeDetail({
+    siteId: parsedSiteId,
+    employeeId: selectedEmployeeId,
+  });
+
+  const { data: contractPdfUrl, isLoading: isPdfLoading } = useContractPdf(
+    selectedContract?.id ?? null,
+    selectedContract !== null,
+  );
+
   const lastErrorMessageRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -83,8 +102,25 @@ export default function ManagerEmployeesPage() {
   };
 
   const handleViewDetail = (employeeId: number) => {
-    // TODO: 상세 정보 모달/페이지 구현
-    console.log("View detail for employee:", employeeId);
+    setSelectedEmployeeId(employeeId);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedEmployeeId(null);
+  };
+
+  const handleOpenContract = (contract: EmployeeContractDocument) => {
+    setSelectedContract(contract);
+  };
+
+  const handleCloseContractModal = () => {
+    setSelectedContract(null);
+  };
+
+  const handleOpenContractInNewWindow = () => {
+    if (contractPdfUrl) {
+      window.open(contractPdfUrl, "_blank");
+    }
   };
 
   const disabledMessage = !hasValidSiteId
@@ -187,6 +223,63 @@ export default function ManagerEmployeesPage() {
           </>
         )}
       </section>
+
+      <ManagerEmployeeDetailModal
+        open={selectedEmployeeId !== null}
+        onClose={handleCloseModal}
+        employee={employee ?? null}
+        contracts={contracts}
+        siteName={siteDetail?.siteName}
+        onOpenContract={handleOpenContract}
+      />
+
+      <Modal
+        open={selectedContract !== null}
+        onCancel={handleCloseContractModal}
+        footer={null}
+        centered
+        width={900}
+        classNames={{
+          content: "bg-white",
+          body: "p-6",
+        }}
+        styles={{
+          content: {
+            backgroundColor: "#ffffff",
+          },
+        }}
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="mb-0! text-2xl font-semibold text-brand-primary-strong">
+                {selectedContract?.title ?? "근로계약서"}
+              </p>
+              <p className="mb-0! text-sm text-text-subtle">{siteDetail?.siteName ?? ""}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {contractPdfUrl && (
+                <Button variant="primary" size="md" onClick={handleOpenContractInNewWindow}>
+                  전체 보기
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border bg-bg-subtle p-4">
+            {isPdfLoading ? (
+              <div className="flex h-[480px] items-center justify-center text-text-subtle">
+                PDF를 불러오는 중...
+              </div>
+            ) : contractPdfUrl ? (
+              <PDFViewer pdfUrl={contractPdfUrl} />
+            ) : (
+              <div className="flex h-[480px] items-center justify-center text-text-subtle">
+                PDF를 불러올 수 없습니다.
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
