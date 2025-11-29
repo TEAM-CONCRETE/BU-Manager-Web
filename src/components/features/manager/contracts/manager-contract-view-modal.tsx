@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Modal, notification } from "antd";
 import SignatureCanvas from "react-signature-canvas";
+import dayjs from "dayjs";
 
 import { PDFViewer } from "@/components/common/pdf-viewer";
 import { Button } from "@/components/ui/Button/button";
@@ -29,29 +30,8 @@ type SignatureHistoryItem = {
   id: number;
   occurredAt: string;
   description: string;
-  actor: string;
+  status: "completed" | "pending";
 };
-
-const dummySignatureHistory: SignatureHistoryItem[] = [
-  {
-    id: 1,
-    occurredAt: "2025.09.10 14:21",
-    description: "계약서 작성 완료",
-    actor: "시스템",
-  },
-  {
-    id: 2,
-    occurredAt: "2025.09.11 09:40",
-    description: "근로자 열람 완료",
-    actor: "박승희",
-  },
-  {
-    id: 3,
-    occurredAt: "2025.09.12 10:15",
-    description: "관리자 서명 대기",
-    actor: "-",
-  },
-];
 
 export function ManagerContractViewModal({
   open,
@@ -73,6 +53,61 @@ export function ManagerContractViewModal({
     siteId: siteId ?? 0,
     contractId: contractId ?? 0,
   });
+
+  // 계약서 작성 이력 생성
+  const signatureHistory = useMemo((): SignatureHistoryItem[] => {
+    if (!contract) return [];
+
+    const history: SignatureHistoryItem[] = [];
+
+    // 1. 계약서 작성 완료
+    if (contract.writtenAt) {
+      history.push({
+        id: 1,
+        occurredAt: dayjs(contract.writtenAt).format("YYYY.MM.DD HH:mm"),
+        description: "계약서 작성 완료",
+        status: "completed",
+      });
+    }
+
+    // 2. 관리자 서명 완료
+    if (contract.corporationSignedAt) {
+      history.push({
+        id: 2,
+        occurredAt: dayjs(contract.corporationSignedAt).format("YYYY.MM.DD HH:mm"),
+        description: "관리자 서명 완료",
+        status: "completed",
+      });
+    } else if (contract.writtenAt) {
+      // 작성은 됐지만 관리자 서명이 안 된 경우
+      history.push({
+        id: 2,
+        occurredAt: "-",
+        description: "관리자 서명 대기",
+        status: "pending",
+      });
+    }
+
+    // 3. 근로자 서명 완료
+    if (contract.employeeSignedAt) {
+      history.push({
+        id: 3,
+        occurredAt: dayjs(contract.employeeSignedAt).format("YYYY.MM.DD HH:mm"),
+        description: "근로자 서명 완료",
+        status: "completed",
+      });
+    } else if (contract.corporationSignedAt) {
+      // 관리자 서명은 됐지만 근로자 서명이 안 된 경우
+      history.push({
+        id: 3,
+        occurredAt: "-",
+        description: "근로자 서명 대기",
+        status: "pending",
+      });
+    }
+
+    return history;
+  }, [contract]);
 
   const handleClose = () => {
     signaturePadRef.current?.clear();
@@ -296,17 +331,32 @@ export function ManagerContractViewModal({
                 <tr>
                   <th className="px-4 py-2 text-left font-medium">변경 일시</th>
                   <th className="px-4 py-2 text-left font-medium">변경 내용</th>
-                  <th className="px-4 py-2 text-left font-medium">담당자</th>
+                  <th className="px-4 py-2 text-left font-medium">상태</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border text-text-base">
-                {dummySignatureHistory.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.occurredAt}</td>
-                    <td className="px-4 py-2">{item.description}</td>
-                    <td className="px-4 py-2 whitespace-nowrap">{item.actor}</td>
+                {signatureHistory.length > 0 ? (
+                  signatureHistory.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-4 py-2 whitespace-nowrap">{item.occurredAt}</td>
+                      <td className="px-4 py-2">{item.description}</td>
+                      <td className="px-4 py-2 whitespace-nowrap">
+                        <StatusPill
+                          size="sm"
+                          variant={item.status === "completed" ? "success" : "neutral"}
+                        >
+                          {item.status === "completed" ? "완료" : "대기"}
+                        </StatusPill>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="px-4 py-8 text-center text-text-subtle">
+                      계약서 이력이 없습니다.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

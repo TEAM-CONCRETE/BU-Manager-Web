@@ -78,6 +78,9 @@ export default function ManagerContractsPage() {
       joinDate: item.employeeStartDate,
       endDate: item.employeeEndDate,
       phone: item.employeePhone ?? undefined,
+      writtenAt: item.writtenAt,
+      corporationSignedAt: item.corporationSignedAt,
+      employeeSignedAt: item.employeeSignedAt,
     })) ?? [];
   const totalRecords = contractsData?.pagination.totalElements ?? 0;
   const totalCount = contractsData?.pagination.totalElements ?? 0;

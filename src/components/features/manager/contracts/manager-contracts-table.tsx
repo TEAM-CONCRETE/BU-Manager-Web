@@ -18,6 +18,9 @@ export type ManagerContractsRow = {
   joinDate?: string;
   endDate?: string;
   phone?: string;
+  writtenAt?: string | null;
+  corporationSignedAt?: string | null;
+  employeeSignedAt?: string | null;
 };
 
 type ManagerContractsTableProps = {
