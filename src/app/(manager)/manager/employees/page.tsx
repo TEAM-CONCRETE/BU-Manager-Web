@@ -165,6 +165,7 @@ export default function ManagerEmployeesPage() {
               type="button"
               onClick={() => refetch()}
               disabled={!hasValidSiteId}
+              aria-label="근로자 목록 새로고침"
               className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-subtle hover:bg-bg-subtle disabled:cursor-not-allowed disabled:opacity-60 dark:border-dark-border dark:text-dark-text-base dark:hover:bg-dark-bg-surface"
             >
               ↻
