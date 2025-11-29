@@ -268,60 +268,62 @@ export function ManagerContractViewModal({
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
-          <p className="mb-0! text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
-          <div className="flex h-40 flex-col gap-2 rounded-2xl border border-dashed border-border bg-bg-subtle px-4 py-3">
-            <div className="relative flex-1 overflow-hidden rounded-xl bg-white">
-              <SignatureCanvas
-                ref={signaturePadRef}
-                penColor="#2563EB"
-                onEnd={() => {
-                  if (!signaturePadRef.current?.isEmpty()) {
-                    setHasSignature(true);
-                  }
-                }}
-                canvasProps={{
-                  className: "w-full h-full cursor-crosshair bg-transparent",
-                }}
-              />
-              {!hasSignature && (
-                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-                  <Image
-                    src="/assets/icons/signature.svg"
-                    alt="서명 아이콘"
-                    width={32}
-                    height={32}
-                    className="h-8 w-8"
-                  />
-                  <p className="mb-0! text-xs text-text-subtle">
-                    서명을 추가하려면 여기를 드래그하거나 터치하세요.
-                  </p>
-                </div>
-              )}
+        {!contract?.corporationSignedAt && (
+          <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
+            <p className="mb-0! text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
+            <div className="flex h-40 flex-col gap-2 rounded-2xl border border-dashed border-border bg-bg-subtle px-4 py-3">
+              <div className="relative flex-1 overflow-hidden rounded-xl bg-white">
+                <SignatureCanvas
+                  ref={signaturePadRef}
+                  penColor="#2563EB"
+                  onEnd={() => {
+                    if (!signaturePadRef.current?.isEmpty()) {
+                      setHasSignature(true);
+                    }
+                  }}
+                  canvasProps={{
+                    className: "w-full h-full cursor-crosshair bg-transparent",
+                  }}
+                />
+                {!hasSignature && (
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
+                    <Image
+                      src="/assets/icons/signature.svg"
+                      alt="서명 아이콘"
+                      width={32}
+                      height={32}
+                      className="h-8 w-8"
+                    />
+                    <p className="mb-0! text-xs text-text-subtle">
+                      서명을 추가하려면 여기를 드래그하거나 터치하세요.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col items-start justify-between gap-2 pt-2 sm:flex-row sm:items-center">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col items-start justify-between gap-2 pt-2 sm:flex-row sm:items-center">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSignatureClear}
+                  disabled={!hasSignature}
+                >
+                  서명 삭제
+                </Button>
+              </div>
               <Button
-                variant="ghost"
+                variant="primary"
                 size="sm"
-                onClick={handleSignatureClear}
-                disabled={!hasSignature}
+                onClick={handleSignatureSave}
+                disabled={!hasSignature || managerSignatureMutation.isPending}
               >
-                서명 삭제
+                {managerSignatureMutation.isPending ? "서명 저장 중..." : "서명 저장"}
               </Button>
             </div>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleSignatureSave}
-              disabled={!hasSignature || managerSignatureMutation.isPending}
-            >
-              {managerSignatureMutation.isPending ? "서명 저장 중..." : "서명 저장"}
-            </Button>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-3">
           <p className="mb-0! text-sm font-semibold text-text-strong">계약서 이력</p>
