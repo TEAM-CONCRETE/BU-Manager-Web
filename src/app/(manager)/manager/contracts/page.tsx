@@ -62,7 +62,7 @@ export default function ManagerContractsPage() {
 
   const records =
     contractsData?.items.map((item) => ({
-      id: item.contractId ?? item.employeeId,
+      id: item.contractId != null ? `contract-${item.contractId}` : `employee-${item.employeeId}`,
       contractId: item.contractId,
       employeeId: item.employeeId,
       employeeUserId: item.userId,
@@ -114,7 +114,10 @@ export default function ManagerContractsPage() {
     });
   }, [isError, error]);
 
-  const { data: pdfUrl } = useContractPdf(selectedContractId, Boolean(selectedContractId));
+  const { data: pdfUrl, refetch: refetchPdf } = useContractPdf(
+    selectedContractId,
+    Boolean(selectedContractId),
+  );
 
   // 작성 완료 후 돌아온 경우, 생성된 계약서 현황 모달 자동 오픈
   useEffect(() => {
@@ -124,13 +127,16 @@ export default function ManagerContractsPage() {
     const createdId = Number(createdIdParam);
     if (Number.isNaN(createdId)) return;
 
-    setSelectedContractId(createdId);
+    // 리스트 먼저 refetch 후 모달 오픈
+    refetch().then(() => {
+      setSelectedContractId(createdId);
+    });
 
     const cleaned = new URLSearchParams(Array.from(searchParams.entries()));
     cleaned.delete("createdContractId");
     const queryString = cleaned.toString();
     router.replace(queryString ? `/manager/contracts?${queryString}` : "/manager/contracts");
-  }, [searchParams, router]);
+  }, [searchParams, router, refetch]);
 
   const handleSearchSubmit = (value: string) => {
     const keyword = value.trim() || undefined;
@@ -258,19 +264,23 @@ export default function ManagerContractsPage() {
 
       <ManagerContractViewModal
         open={Boolean(selectedContractId)}
-        onClose={() => setSelectedContractId(null)}
+        onClose={() => {
+          setSelectedContractId(null);
+          refetch(); // 모달 닫을 때 테이블 리프레시
+        }}
         contract={selectedContract}
         siteName={siteDetail?.siteName}
         pdfUrl={pdfUrl ?? undefined}
+        siteId={parsedSiteId}
         zIndex={2000}
         onOpenInNewWindow={() => {
           if (pdfUrl) {
             window.open(pdfUrl, "_blank");
           }
         }}
-        onSignatureSuccess={() => {
-          refetch();
-          setSelectedContractId(null);
+        onSignatureSuccess={async () => {
+          await refetchPdf();
+          await refetch();
         }}
       />
 

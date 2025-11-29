@@ -7,10 +7,10 @@ import { cn } from "@/utils/cn";
 import { formatPhone } from "@/utils/phone";
 
 export type ManagerContractsRow = {
-  id: number;
+  id: string | number;
   employeeId?: number;
   employeeUserId?: string;
-  contractId?: number;
+  contractId?: number | null;
   name: string;
   residentNumber: string;
   employmentType: "REGULAR" | "DAILY" | "UNCONTRACTED";

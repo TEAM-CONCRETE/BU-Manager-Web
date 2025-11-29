@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { Modal } from "antd";
+import { Modal, notification } from "antd";
 import SignatureCanvas from "react-signature-canvas";
 
 import { PDFViewer } from "@/components/common/pdf-viewer";
@@ -11,6 +11,7 @@ import { StatusPill } from "@/components/ui/StatusPill/status-pill";
 import type { ManagerContractsRow } from "@/components/features/manager/contracts/manager-contracts-table";
 import { formatPhone } from "@/utils/phone";
 import { mapStatusToLabelAndVariant } from "@/components/features/manager/contracts/manager-contracts-table";
+import { useManagerSignature } from "@/hooks/use-manager-signature";
 
 type ManagerContractViewModalProps = {
   open: boolean;
@@ -19,6 +20,8 @@ type ManagerContractViewModalProps = {
   siteName?: string;
   pdfUrl?: string;
   onOpenInNewWindow?: () => void;
+  onSignatureSuccess?: () => void;
+  siteId?: number;
   zIndex?: number;
 };
 
@@ -57,16 +60,23 @@ export function ManagerContractViewModal({
   siteName,
   pdfUrl,
   onOpenInNewWindow,
+  onSignatureSuccess,
+  siteId,
   zIndex,
 }: ManagerContractViewModalProps) {
   const signaturePadRef = useRef<SignatureCanvas | null>(null);
   const [hasSignature, setHasSignature] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const contractId = contract?.contractId;
+
+  const managerSignatureMutation = useManagerSignature({
+    siteId: siteId ?? 0,
+    contractId: contractId ?? 0,
+  });
 
   const handleClose = () => {
     signaturePadRef.current?.clear();
     setHasSignature(false);
-    setIsSaving(false);
     onClose();
   };
 
@@ -89,15 +99,34 @@ export function ManagerContractViewModal({
   const handleSignatureSave = async () => {
     const pad = signaturePadRef.current;
     if (!pad || pad.isEmpty()) return;
+    if (!siteId || !contractId) {
+      notification.error({
+        message: "서명 처리에 필요한 정보가 없습니다. 페이지를 새로고침 후 다시 시도해주세요.",
+        placement: "topRight",
+      });
+      return;
+    }
 
-    const dataUrl = pad.toDataURL("image/png");
-    // TODO: 이후 실제 서명 이미지 업로드/저장 API 연동
-    void dataUrl;
+    try {
+      const dataUrl = pad.toDataURL("image/png");
+      await managerSignatureMutation.mutateAsync(dataUrl);
 
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    setIsSaving(false);
-    setHasSignature(true);
+      notification.success({
+        message: "관리자 서명이 저장되었습니다.",
+        placement: "topRight",
+      });
+
+      setHasSignature(false);
+      pad.clear();
+      onSignatureSuccess?.();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "관리자 서명을 처리하는 중 오류가 발생했습니다.";
+      notification.error({
+        message,
+        placement: "topRight",
+      });
+    }
   };
 
   const status = contract
@@ -124,47 +153,47 @@ export function ManagerContractViewModal({
     >
       <div className="flex flex-col gap-6">
         <header className="space-y-1">
-          <p className="!mb-0 text-xl font-semibold text-text-strong">근로계약서 관리</p>
-          <p className="!mb-0 text-xs text-text-subtle">
+          <p className="mb-0! text-xl font-semibold text-text-strong">근로계약서 관리</p>
+          <p className="mb-0! text-xs text-text-subtle">
             계약서 작성 후, 문서 열람 및 전자 서명을 진행하세요.
           </p>
         </header>
 
         <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4">
           <div className="flex items-center justify-between mb-4">
-            <p className="!mb-0 text-sm font-semibold text-text-strong">계약서 정보 요약</p>
+            <p className="mb-0! text-sm font-semibold text-text-strong">계약서 정보 요약</p>
           </div>
           <div className="grid grid-cols-1 gap-4 text-xs text-text-subtle sm:grid-cols-2">
             <div className="space-y-1">
-              <p className="!mb-1 text-[11px] text-text-subtle">근로자 이름</p>
-              <p className="!mb-2 text-sm text-text-strong">{contract?.name ?? "-"}</p>
-              <p className="!mb-1 mt-3 text-[11px] text-text-subtle">직무</p>
-              <p className="!mb-2 text-sm text-text-strong">현장 근로자</p>
-              <p className="!mb-1 mt-3 text-[11px] text-text-subtle">근로자 유형</p>
-              <p className="!mb-2 text-sm text-text-strong">
+              <p className="mb-1! text-[11px] text-text-subtle">근로자 이름</p>
+              <p className="mb-2! text-sm text-text-strong">{contract?.name ?? "-"}</p>
+              <p className="mb-1! mt-3 text-[11px] text-text-subtle">직무</p>
+              <p className="mb-2! text-sm text-text-strong">현장 근로자</p>
+              <p className="mb-1! mt-3 text-[11px] text-text-subtle">근로자 유형</p>
+              <p className="mb-2! text-sm text-text-strong">
                 {contract?.employmentType === "REGULAR"
                   ? "상용직 근로자"
                   : contract?.employmentType === "DAILY"
                     ? "일용직 근로자"
                     : "-"}
               </p>
-              <p className="!mb-1 mt-3 text-[11px] text-text-subtle">연락처</p>
-              <p className="!mb-2 text-sm text-text-strong">{formatPhone(contract?.phone)}</p>
+              <p className="mb-1! mt-3 text-[11px] text-text-subtle">연락처</p>
+              <p className="mb-2! text-sm text-text-strong">{formatPhone(contract?.phone)}</p>
             </div>
             <div className="space-y-1">
-              <p className="!mb-1 text-[11px] text-text-subtle">계약기간</p>
-              <p className="!mb-2 text-sm text-text-strong">
+              <p className="mb-1! text-[11px] text-text-subtle">계약기간</p>
+              <p className="mb-2! text-sm text-text-strong">
                 {contract?.joinDate ?? "-"} {contract?.endDate ? ` ~ ${contract.endDate}` : ""}
               </p>
-              <p className="!mb-1 mt-3 text-[11px] text-text-subtle">현장명</p>
-              <p className="!mb-2 text-sm text-text-strong">{siteName ?? "-"}</p>
-              <p className="!mb-1 mt-3 text-[11px] text-text-subtle">상태</p>
+              <p className="mb-1! mt-3 text-[11px] text-text-subtle">현장명</p>
+              <p className="mb-2! text-sm text-text-strong">{siteName ?? "-"}</p>
+              <p className="mb-1! mt-3 text-[11px] text-text-subtle">상태</p>
               {status ? (
                 <StatusPill size="sm" variant={status.variant}>
                   {status.label}
                 </StatusPill>
               ) : (
-                <p className="!mb-2 text-sm text-text-subtle">-</p>
+                <p className="mb-2! text-sm text-text-subtle">-</p>
               )}
             </div>
           </div>
@@ -173,8 +202,8 @@ export function ManagerContractViewModal({
         <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="!mb-0 text-sm font-semibold text-text-strong">근로계약서 미리보기</p>
-              <p className="!mb-0 mt-1 text-xs text-text-subtle">
+              <p className="mb-0! text-sm font-semibold text-text-strong">근로계약서 미리보기</p>
+              <p className="mb-0! mt-1 text-xs text-text-subtle">
                 입력된 정보를 기반으로 자동 생성된 계약서를 확인하세요.
               </p>
             </div>
@@ -205,7 +234,7 @@ export function ManagerContractViewModal({
         </section>
 
         <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-4">
-          <p className="!mb-0 text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
+          <p className="mb-0! text-sm font-semibold text-text-strong">관리자 서명 및 승인</p>
           <div className="flex h-40 flex-col gap-2 rounded-2xl border border-dashed border-border bg-bg-subtle px-4 py-3">
             <div className="relative flex-1 overflow-hidden rounded-xl bg-white">
               <SignatureCanvas
@@ -229,7 +258,7 @@ export function ManagerContractViewModal({
                     height={32}
                     className="h-8 w-8"
                   />
-                  <p className="!mb-0 text-xs text-text-subtle">
+                  <p className="mb-0! text-xs text-text-subtle">
                     서명을 추가하려면 여기를 드래그하거나 터치하세요.
                   </p>
                 </div>
@@ -252,15 +281,15 @@ export function ManagerContractViewModal({
               variant="primary"
               size="sm"
               onClick={handleSignatureSave}
-              disabled={!hasSignature || isSaving}
+              disabled={!hasSignature || managerSignatureMutation.isPending}
             >
-              {isSaving ? "서명 저장 중..." : "서명 저장"}
+              {managerSignatureMutation.isPending ? "서명 저장 중..." : "서명 저장"}
             </Button>
           </div>
         </section>
 
         <section className="rounded-2xl border border-border bg-bg-surface px-6 py-4 space-y-3">
-          <p className="!mb-0 text-sm font-semibold text-text-strong">계약서 이력</p>
+          <p className="mb-0! text-sm font-semibold text-text-strong">계약서 이력</p>
           <div className="overflow-hidden rounded-xl border border-border">
             <table className="min-w-full divide-y divide-border bg-white text-xs">
               <thead className="bg-bg-subtle text-text-subtle">
