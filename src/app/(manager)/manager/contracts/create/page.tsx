@@ -211,8 +211,11 @@ export default function ManagerContractCreatePage() {
     }
 
     try {
-      const firstDayKey = activeWeekdays[0];
-      const firstSchedule = schedule[firstDayKey];
+      // 활성화된 첫 번째 근무일 찾기 (enabled: true인 첫 번째 요일)
+      const firstEnabledDayKey = activeWeekdays.find((key) => schedule[key].enabled);
+      const firstSchedule = firstEnabledDayKey
+        ? schedule[firstEnabledDayKey]
+        : schedule[activeWeekdays[0]]; // 활성화된 요일이 없으면 첫 번째 요일 사용 (fallback)
 
       const startTime = (firstSchedule?.startTime || DEFAULT_START_TIME) + ":00";
       const endTime = (firstSchedule?.endTime || DEFAULT_END_TIME) + ":00";
