@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getContractInfo, type ContractInfoResponse } from "@/lib/api/get-contract-info";
 
-type UseContractInfoOptions = {
+export type UseContractInfoOptions = {
   enabled?: boolean;
 };
 
