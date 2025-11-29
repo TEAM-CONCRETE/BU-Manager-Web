@@ -58,6 +58,36 @@ export function ManagerContractViewModal({
     }
   }, [contract?.corporationSignedAt, localCorporationSignedAt]);
 
+  useEffect(() => {
+    const resize = () => {
+      if (!signaturePadRef.current) return;
+      const canvas = signaturePadRef.current.getCanvas();
+      if (!canvas) return;
+
+      const ratio = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+
+      canvas.width = Math.round(w * ratio);
+      canvas.height = Math.round(h * ratio);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+
+      const ctx = canvas.getContext("2d");
+      ctx?.setTransform(ratio, 0, 0, ratio, 0, 0);
+    };
+
+    if (open) {
+      const timeoutId = setTimeout(resize, 100);
+      window.addEventListener("resize", resize);
+
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener("resize", resize);
+      };
+    }
+  }, [open]);
+
   const managerSignatureMutation = useManagerSignature({
     siteId: siteId ?? 0,
     contractId: contractId ?? 0,
@@ -297,6 +327,8 @@ export function ManagerContractViewModal({
                   }}
                   canvasProps={{
                     className: "w-full h-full cursor-crosshair bg-transparent",
+                    width: undefined,
+                    height: undefined,
                   }}
                 />
                 {!hasSignature && (
