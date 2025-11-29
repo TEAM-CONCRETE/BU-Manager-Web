@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input, notification } from "antd";
 import {
@@ -89,10 +89,55 @@ export default function ManagerContractsPage() {
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null);
   const [createTarget, setCreateTarget] = useState<ManagerContractsRow | null>(null);
 
-  const selectedContract =
-    selectedContractId != null
-      ? (records.find((record) => record.contractId === selectedContractId) ?? null)
-      : null;
+  // 계약서 작성 후 모달 오픈 시 사용할 임시 데이터 (쿼리스트링이 사라지기 전에 저장)
+  const [tempContractData, setTempContractData] = useState<{
+    employeeName: string;
+    employeeUserId: string | null;
+    empType: string | null;
+    phone: string | null;
+    startDate: string | null;
+    endDate: string | null;
+  } | null>(null);
+
+  const selectedContract = useMemo(() => {
+    if (selectedContractId == null) return null;
+
+    // 먼저 테이블 데이터에서 찾기
+    const foundInRecords = records.find((record) => record.contractId === selectedContractId);
+    if (foundInRecords) {
+      // 테이블 데이터를 찾으면 임시 데이터 초기화
+      if (tempContractData) {
+        setTempContractData(null);
+      }
+      return foundInRecords;
+    }
+
+    // 테이블에서 못 찾으면 임시 데이터로 객체 생성
+    if (tempContractData?.employeeName) {
+      return {
+        id: `contract-${selectedContractId}`,
+        contractId: selectedContractId,
+        name: tempContractData.employeeName,
+        residentNumber: "",
+        employmentType:
+          tempContractData.empType === "PERMANENT"
+            ? ("REGULAR" as const)
+            : tempContractData.empType === "DAILY"
+              ? ("DAILY" as const)
+              : ("UNCONTRACTED" as const),
+        contractStatus: "DRAFT" as const,
+        joinDate: tempContractData.startDate ?? undefined,
+        endDate: tempContractData.endDate ?? undefined,
+        phone: tempContractData.phone ?? undefined,
+        employeeUserId: tempContractData.employeeUserId ?? undefined,
+        writtenAt: new Date().toISOString(),
+        corporationSignedAt: null,
+        employeeSignedAt: null,
+      } as ManagerContractsRow;
+    }
+
+    return null;
+  }, [selectedContractId, records, tempContractData]);
 
   const lastErrorMessageRef = useRef<string | null>(null);
 
@@ -130,13 +175,40 @@ export default function ManagerContractsPage() {
     const createdId = Number(createdIdParam);
     if (Number.isNaN(createdId)) return;
 
-    // 리스트 먼저 refetch 후 모달 오픈
-    refetch().then(() => {
-      setSelectedContractId(createdId);
-    });
+    // 쿼리스트링에서 근로자 정보를 state에 저장 (쿼리스트링이 사라지기 전에)
+    const employeeName = searchParams.get("employeeName");
+    const employeeUserId = searchParams.get("employeeUserId");
+    const empType = searchParams.get("empType");
+    const phone = searchParams.get("phone");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
+    if (employeeName) {
+      setTempContractData({
+        employeeName,
+        employeeUserId,
+        empType,
+        phone,
+        startDate,
+        endDate,
+      });
+    }
+
+    // 모달 즉시 오픈 (임시 데이터로 표시)
+    setSelectedContractId(createdId);
+
+    // 리스트 refetch (백그라운드에서 실행)
+    refetch();
+
+    // 쿼리스트링 정리 (계약서 작성 관련 파라미터 제거)
     const cleaned = new URLSearchParams(Array.from(searchParams.entries()));
     cleaned.delete("createdContractId");
+    cleaned.delete("employeeName");
+    cleaned.delete("employeeUserId");
+    cleaned.delete("empType");
+    cleaned.delete("phone");
+    cleaned.delete("startDate");
+    cleaned.delete("endDate");
     const queryString = cleaned.toString();
     router.replace(queryString ? `/manager/contracts?${queryString}` : "/manager/contracts");
   }, [searchParams, router, refetch]);
@@ -165,6 +237,9 @@ export default function ManagerContractsPage() {
     }
     if (createTarget.employeeUserId) {
       searchParams.set("userId", createTarget.employeeUserId);
+    }
+    if (createTarget.phone) {
+      searchParams.set("phone", createTarget.phone);
     }
 
     router.push(`/manager/contracts/create?${searchParams.toString()}`);
@@ -269,6 +344,7 @@ export default function ManagerContractsPage() {
         open={Boolean(selectedContractId)}
         onClose={() => {
           setSelectedContractId(null);
+          setTempContractData(null); // 임시 데이터 초기화
           refetch(); // 모달 닫을 때 테이블 리프레시
         }}
         contract={selectedContract}

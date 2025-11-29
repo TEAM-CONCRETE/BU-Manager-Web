@@ -286,7 +286,30 @@ export default function ManagerContractCreatePage() {
         placement: "topRight",
       });
 
-      router.push(`/manager/contracts?createdContractId=${contractId}`);
+      // 근로자 정보를 쿼리스트링으로 전달
+      const redirectParams = new URLSearchParams();
+      redirectParams.set("createdContractId", String(contractId));
+      if (employeeName) {
+        redirectParams.set("employeeName", employeeName);
+      }
+      if (employeeUserId) {
+        redirectParams.set("employeeUserId", employeeUserId);
+      }
+      if (empType) {
+        redirectParams.set("empType", empType);
+      }
+      const phone = searchParams.get("phone");
+      if (phone) {
+        redirectParams.set("phone", phone);
+      }
+      if (contractInfo.startDate) {
+        redirectParams.set("startDate", contractInfo.startDate);
+      }
+      if (contractInfo.endDate) {
+        redirectParams.set("endDate", contractInfo.endDate);
+      }
+
+      router.push(`/manager/contracts?${redirectParams.toString()}`);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "근로계약서를 저장하는 중 오류가 발생했습니다.";

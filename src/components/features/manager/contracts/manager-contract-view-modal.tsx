@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Modal, notification } from "antd";
 import SignatureCanvas from "react-signature-canvas";
@@ -46,8 +46,17 @@ export function ManagerContractViewModal({
 }: ManagerContractViewModalProps) {
   const signaturePadRef = useRef<SignatureCanvas | null>(null);
   const [hasSignature, setHasSignature] = useState(false);
+  // 서명 완료 시점의 타임스탬프 (즉시 반영용)
+  const [localCorporationSignedAt, setLocalCorporationSignedAt] = useState<string | null>(null);
 
   const contractId = contract?.contractId;
+
+  // contract.corporationSignedAt이 업데이트되면 로컬 상태 초기화 (refetch 완료 후)
+  useEffect(() => {
+    if (contract?.corporationSignedAt && localCorporationSignedAt) {
+      setLocalCorporationSignedAt(null);
+    }
+  }, [contract?.corporationSignedAt, localCorporationSignedAt]);
 
   const managerSignatureMutation = useManagerSignature({
     siteId: siteId ?? 0,
@@ -70,11 +79,12 @@ export function ManagerContractViewModal({
       });
     }
 
-    // 2. 관리자 서명 완료
-    if (contract.corporationSignedAt) {
+    // 2. 관리자 서명 완료 (로컬 상태 우선, 없으면 contract 데이터 사용)
+    const corporationSignedAt = localCorporationSignedAt || contract.corporationSignedAt;
+    if (corporationSignedAt) {
       history.push({
         id: 2,
-        occurredAt: dayjs(contract.corporationSignedAt).format("YYYY.MM.DD HH:mm"),
+        occurredAt: dayjs(corporationSignedAt).format("YYYY.MM.DD HH:mm"),
         description: "관리자 서명 완료",
         status: "completed",
       });
@@ -96,7 +106,7 @@ export function ManagerContractViewModal({
         description: "근로자 서명 완료",
         status: "completed",
       });
-    } else if (contract.corporationSignedAt) {
+    } else if (corporationSignedAt) {
       // 관리자 서명은 됐지만 근로자 서명이 안 된 경우
       history.push({
         id: 3,
@@ -107,11 +117,12 @@ export function ManagerContractViewModal({
     }
 
     return history;
-  }, [contract]);
+  }, [contract, localCorporationSignedAt]);
 
   const handleClose = () => {
     signaturePadRef.current?.clear();
     setHasSignature(false);
+    setLocalCorporationSignedAt(null); // 로컬 상태 초기화
     onClose();
   };
 
@@ -145,6 +156,9 @@ export function ManagerContractViewModal({
     try {
       const dataUrl = pad.toDataURL("image/png");
       await managerSignatureMutation.mutateAsync(dataUrl);
+
+      // 서명 완료 시점의 타임스탬프를 로컬 상태에 저장 (즉시 이력 반영)
+      setLocalCorporationSignedAt(new Date().toISOString());
 
       notification.success({
         message: "관리자 서명이 저장되었습니다.",
