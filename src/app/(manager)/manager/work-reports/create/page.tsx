@@ -96,7 +96,7 @@ export default function ManagerWorkReportCreatePage() {
   ];
 
   const handleAddWorkforceRow = () => {
-    const newId = String(workforceEntries.length + 1);
+    const newId = String(Date.now());
     setWorkforceEntries([...workforceEntries, { id: newId, process: "", todayCount: 0 }]);
   };
 
@@ -135,7 +135,7 @@ export default function ManagerWorkReportCreatePage() {
   };
 
   const handleAddMaterialRow = () => {
-    const newId = String(materialEntries.length + 1);
+    const newId = String(Date.now());
     setMaterialEntries([
       ...materialEntries,
       { id: newId, name: "", specification: "", unit: "", todayQuantity: 0 },
