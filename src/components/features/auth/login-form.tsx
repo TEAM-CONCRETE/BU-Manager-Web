@@ -119,10 +119,11 @@ export function LoginForm({
           type="submit"
           size="lg"
           className="w-full"
+          isLoading={loginMutation.isPending}
           disabled={loginMutation.isPending}
           variant={primaryButtonVariant}
         >
-          {loginMutation.isPending ? "로그인 중..." : primaryButtonLabel}
+          {primaryButtonLabel}
         </Button>
       </form>
 

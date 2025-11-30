@@ -6,6 +6,17 @@ import { useRouter } from "next/navigation";
 import { useRefreshSession } from "@/hooks/use-refresh-session";
 import { useSessionStore, type SessionUser } from "@/stores/session-store";
 
+function LoadingFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-bg-page dark:bg-dark-bg-page">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-border border-t-brand-primary dark:border-dark-border dark:border-t-brand-primary" />
+        <p className="text-sm text-text-subtle dark:text-dark-text-base">로딩 중...</p>
+      </div>
+    </div>
+  );
+}
+
 type RoleGuardProps = {
   allowedRoles: SessionUser["role"][];
   unauthenticatedRedirect: string;
@@ -84,6 +95,17 @@ export function RoleGuard({
   ]);
 
   const isAuthorized = !!user && allowedRoles.includes(user.role);
+  const isLoading =
+    isFetching ||
+    isRefreshing ||
+    refreshStatus === "pending" ||
+    (!user && !hasRedirected && hasRequestedRefresh);
+
+  // Next.js의 loading.tsx와 동일한 UI를 표시
+  if (isLoading) {
+    return <LoadingFallback />;
+  }
+
   if (!isAuthorized) {
     return null;
   }

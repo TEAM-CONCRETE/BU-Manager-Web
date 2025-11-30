@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { RoleGuard } from "@/components/auth/role-guard";
 
@@ -15,7 +15,7 @@ export default function ManagerLayout({ children }: ManagerLayoutProps) {
       unauthenticatedRedirect="/login/site-manager"
       roleRedirectMap={{ company: "/login/company" }}
     >
-      {children}
+      <Suspense fallback={null}>{children}</Suspense>
     </RoleGuard>
   );
 }
