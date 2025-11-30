@@ -173,11 +173,18 @@ export default function ManagerSafetyEducationSelectPage() {
           rowSelection={{
             selectedRowKeys: Array.from(selectedEmployeeIds),
             onSelectAll: (selected) => {
+              const newSet = new Set(selectedEmployeeIds);
+              const currentEmployeeIds = employees.map((emp) => emp.employeeId);
+
               if (selected) {
-                setSelectedEmployeeIds(new Set(employees.map((emp) => emp.employeeId)));
+                // 현재 보이는 근로자들을 기존 선택에 추가 (merge)
+                currentEmployeeIds.forEach((id) => newSet.add(id));
               } else {
-                setSelectedEmployeeIds(new Set());
+                // 현재 보이는 근로자들만 해제 (다른 필터의 선택은 유지)
+                currentEmployeeIds.forEach((id) => newSet.delete(id));
               }
+
+              setSelectedEmployeeIds(newSet);
             },
             onSelect: (record, selected) => {
               const newSet = new Set(selectedEmployeeIds);
