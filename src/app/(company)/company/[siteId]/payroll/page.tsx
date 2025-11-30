@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Select, notification } from "antd";
 
-import { CompanyTopNav } from "@/components/features/company/company-top-nav";
 import {
   InlineDateFilters,
   type InlineDateValue,
@@ -12,8 +11,10 @@ import {
   SegmentedToggle,
   type SegmentedToggleOption,
 } from "@/components/common/toggles/segmented-toggle";
+import { CompanyTopNav } from "@/components/features/company/company-top-nav";
 import { PayrollSummarySection } from "@/components/features/company/payroll/payroll-summary-section";
 import { PayrollTable } from "@/components/features/company/payroll/payroll-table";
+import { PayrollDetailModal } from "@/components/features/company/payroll/payroll-detail-modal";
 import { buildCompanyNavItems } from "@/constants/company-nav";
 import { useCompanySites } from "@/hooks/use-company-sites";
 import { usePayrollRecords } from "@/hooks/use-payroll-records";
@@ -94,8 +95,14 @@ export default function CompanyPayrollPage({ params }: Props) {
   const records = useMemo(() => payrollData?.records ?? [], [payrollData]);
   const summary = payrollData?.summary;
   const pagination = payrollData?.pagination;
-  const totalRecords = pagination?.totalRecords ?? 0;
   const tableLoading = isLoading || isFetching;
+  const totalRecordsFromApi = pagination?.totalRecords ?? 0;
+
+  const [openPayslip, setOpenPayslip] = useState<{
+    payrollId: number;
+  } | null>(null);
+
+  const totalRecords = totalRecordsFromApi;
   const totalHeadcount = summary?.headcount ?? totalRecords;
   const unpaidCount =
     summary?.unpaidCount ?? records.filter((record) => record.paymentStatus !== "PAID").length;
@@ -260,9 +267,16 @@ export default function CompanyPayrollPage({ params }: Props) {
                 : "표시할 급여 데이터가 없습니다.",
             }}
             onPageChange={(newPage) => setPage(newPage)}
+            onViewPayslip={(record) => setOpenPayslip({ payrollId: record.payrollId })}
           />
         </section>
       </div>
+
+      <PayrollDetailModal
+        open={Boolean(openPayslip)}
+        onClose={() => setOpenPayslip(null)}
+        payrollId={openPayslip?.payrollId ?? null}
+      />
     </div>
   );
 }
