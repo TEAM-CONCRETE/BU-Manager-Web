@@ -34,7 +34,6 @@ export default function ManagerSafetyEducationCreatePage() {
   );
 
   const [educationType, setEducationType] = useState<EducationType | undefined>(undefined);
-  const [otherEducationType, setOtherEducationType] = useState("");
   const [educationSubject, setEducationSubject] = useState("");
   const [educationContent, setEducationContent] = useState("");
   const [instructorName, setInstructorName] = useState("");
@@ -49,15 +48,6 @@ export default function ManagerSafetyEducationCreatePage() {
     if (!educationType) {
       notification.warning({
         message: "교육 구분을 선택해주세요.",
-        placement: "topRight",
-        duration: 3,
-      });
-      return;
-    }
-
-    if (educationType === "OTHER" && !otherEducationType.trim()) {
-      notification.warning({
-        message: "기타 교육 구분을 입력해주세요.",
         placement: "topRight",
         duration: 3,
       });
@@ -86,10 +76,7 @@ export default function ManagerSafetyEducationCreatePage() {
     const params = new URLSearchParams({
       siteName: basicInfo.siteName,
       siteAddress: basicInfo.siteAddress,
-      educationDate: dayjs().format("YYYY-MM-DD"),
-      author: basicInfo.author,
       educationType,
-      otherEducationType: educationType === "OTHER" ? otherEducationType : "",
       educationSubject,
       educationContent,
       instructorName,
@@ -154,9 +141,6 @@ export default function ManagerSafetyEducationCreatePage() {
               value={educationType}
               onChange={(e) => {
                 setEducationType(e.target.value);
-                if (e.target.value !== "OTHER") {
-                  setOtherEducationType("");
-                }
               }}
               className="flex flex-wrap gap-4"
             >
@@ -166,14 +150,6 @@ export default function ManagerSafetyEducationCreatePage() {
               <Radio value="SPECIAL">특별교육</Radio>
               <Radio value="OTHER">기타</Radio>
             </Radio.Group>
-            {educationType === "OTHER" && (
-              <Input
-                value={otherEducationType}
-                onChange={(e) => setOtherEducationType(e.target.value)}
-                placeholder="기타 선택 시 직접 입력"
-                className="mt-3 rounded-lg"
-              />
-            )}
           </div>
 
           <div>

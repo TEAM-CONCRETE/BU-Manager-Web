@@ -7,11 +7,11 @@ import { useQuery } from "@tanstack/react-query";
 import { ManagerSafetyEducationTable } from "@/components/features/manager/safety-education/manager-safety-education-table";
 import { Button } from "@/components/ui/Button/button";
 import { PDFViewer } from "@/components/common/pdf-viewer";
-import { useSafetyEducationReports } from "@/hooks/use-safety-education-reports";
+import { useSafetyEducationLogs } from "@/hooks/use-safety-education-logs";
 import { useSiteDetail } from "@/hooks/use-site-detail";
 import { useSessionStore } from "@/stores/session-store";
-import { getSafetyEducationReportPdfUrl } from "@/lib/api/get-safety-education-report-pdf";
-import type { ManagerSafetyEducationReportRow } from "@/components/features/manager/safety-education/manager-safety-education-table";
+import { getSafetyEducationLogPdfUrl } from "@/lib/api/get-safety-education-log-pdf";
+import type { ManagerSafetyEducationLogRow } from "@/components/features/manager/safety-education/manager-safety-education-table";
 
 export default function ManagerSafetyEducationPage() {
   const router = useRouter();
@@ -22,50 +22,45 @@ export default function ManagerSafetyEducationPage() {
 
   const { data: siteDetail } = useSiteDetail(parsedSiteId);
 
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
-
   const {
-    data: reportsData,
+    data: logsData,
     isLoading,
     isFetching,
     isError,
     error,
     refetch,
-  } = useSafetyEducationReports(
+  } = useSafetyEducationLogs(
     {
       siteId: parsedSiteId,
-      page,
-      size: pageSize,
     },
     {
       enabled: hasValidSiteId,
     },
   );
 
-  const records: ManagerSafetyEducationReportRow[] =
-    reportsData?.items?.map((item) => ({
-      id: item.safetyEducationReportId,
-      educationDate: item.educationDate,
-      writerName: item.writerName,
-      participantCount: item.participantCount,
+  const records: ManagerSafetyEducationLogRow[] =
+    logsData?.items?.map((item) => ({
+      id: item.id,
+      createdAt: item.createdAt,
+      instructorName: item.instructorName,
+      totalAttendeeCount: item.totalAttendeeCount,
+      signedAttendeeCount: item.signedAttendeeCount,
       status: item.status,
     })) ?? [];
-  const totalCount = reportsData?.pagination.totalElements ?? 0;
   const tableLoading = isLoading || isFetching;
 
-  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [selectedLogId, setSelectedLogId] = useState<number | null>(null);
 
-  // 안전교육 일지 PDF URL 가져오기
-  const { data: reportPdfUrl, isLoading: isPdfLoading } = useQuery({
-    queryKey: ["safety-education-report-pdf", parsedSiteId, selectedReportId],
+  // 안전교육일지 PDF URL 가져오기
+  const { data: logPdfUrl, isLoading: isPdfLoading } = useQuery({
+    queryKey: ["safety-education-log-pdf", parsedSiteId, selectedLogId],
     queryFn: () => {
-      if (selectedReportId == null) {
-        return Promise.reject(new Error("안전교육 일지 ID가 없습니다."));
+      if (selectedLogId == null) {
+        return Promise.reject(new Error("안전교육일지 ID가 없습니다."));
       }
-      return getSafetyEducationReportPdfUrl(parsedSiteId, selectedReportId);
+      return getSafetyEducationLogPdfUrl(parsedSiteId, selectedLogId);
     },
-    enabled: selectedReportId != null && hasValidSiteId,
+    enabled: selectedLogId != null && hasValidSiteId,
     staleTime: 1000 * 60 * 5, // 5분
   });
 
@@ -111,21 +106,32 @@ export default function ManagerSafetyEducationPage() {
     router.push("/manager/safety-education/create");
   };
 
-  const handleViewDetail = (reportId: number) => {
-    setSelectedReportId(reportId);
+  const handleViewDetail = (logId: number, status: ManagerSafetyEducationLogRow["status"]) => {
+    // 관리자 서명 대기 또는 관리자 서명 완료 상태인 경우 서명 페이지로 이동
+    if (status === "MANAGER_SIGNING_PENDING" || status === "MANAGER_SIGNED") {
+      router.push(`/manager/safety-education/create/sign?logId=${logId}`);
+      return;
+    }
+    // 완료 상태(모든 서명 완료)인 경우에만 PDF 모달 열기
+    if (status === "COMPLETED") {
+      setSelectedLogId(logId);
+      return;
+    }
+    // 그 외 상태도 PDF 모달 열기 (안전장치)
+    setSelectedLogId(logId);
   };
 
   const handleCloseModal = () => {
-    setSelectedReportId(null);
+    setSelectedLogId(null);
   };
 
   const handleOpenInNewWindow = () => {
-    if (reportPdfUrl) {
-      window.open(reportPdfUrl, "_blank");
+    if (logPdfUrl) {
+      window.open(logPdfUrl, "_blank");
     }
   };
 
-  const selectedReport = records.find((r) => r.id === selectedReportId);
+  const selectedLog = records.find((r) => r.id === selectedLogId);
 
   const disabledMessage = !hasValidSiteId
     ? "현장 정보가 없어 안전교육 일지 데이터를 불러올 수 없습니다. 관리자에게 현장 정보 설정을 요청해주세요."
@@ -173,17 +179,13 @@ export default function ManagerSafetyEducationPage() {
           <ManagerSafetyEducationTable
             records={records}
             isLoading={tableLoading}
-            currentPage={page}
-            pageSize={pageSize}
-            total={totalCount}
-            onPageChange={(newPage) => setPage(newPage)}
             onViewDetail={handleViewDetail}
           />
         )}
       </section>
 
       <Modal
-        open={selectedReportId !== null}
+        open={selectedLogId !== null}
         onCancel={handleCloseModal}
         footer={null}
         centered
@@ -196,16 +198,14 @@ export default function ManagerSafetyEducationPage() {
         <div className="flex flex-col gap-4">
           <div className="flex items-start justify-between">
             <div>
-              <p className="mb-0! text-2xl font-semibold text-brand-primary-strong">
-                안전교육 일지
-              </p>
+              <p className="mb-0! text-2xl font-semibold text-brand-primary-strong">안전교육일지</p>
               <p className="mb-0! text-sm text-text-subtle">
                 {siteDetail?.siteName ?? ""}
-                {selectedReport ? ` | ${selectedReport.educationDate}` : ""}
+                {selectedLog ? ` | ${new Date(selectedLog.createdAt).toLocaleDateString()}` : ""}
               </p>
             </div>
             <div className="flex items-center gap-2 mr-4">
-              {reportPdfUrl && (
+              {logPdfUrl && (
                 <Button variant="primary" size="md" onClick={handleOpenInNewWindow}>
                   전체 보기
                 </Button>
@@ -217,8 +217,8 @@ export default function ManagerSafetyEducationPage() {
               <div className="flex h-[480px] items-center justify-center text-text-subtle">
                 PDF를 불러오는 중...
               </div>
-            ) : reportPdfUrl ? (
-              <PDFViewer pdfUrl={reportPdfUrl} />
+            ) : logPdfUrl ? (
+              <PDFViewer pdfUrl={logPdfUrl} />
             ) : (
               <div className="flex h-[480px] items-center justify-center text-text-subtle">
                 PDF를 불러올 수 없습니다.
