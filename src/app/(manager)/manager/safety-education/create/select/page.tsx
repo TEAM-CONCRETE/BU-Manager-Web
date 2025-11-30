@@ -51,7 +51,7 @@ export default function ManagerSafetyEducationSelectPage() {
   const [employmentFilter, setEmploymentFilter] = useState<EmploymentFilterValue>("ALL");
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<number>>(new Set());
 
-  // 근로자 목록 조회
+  // 근로자 목록 조회 (필터링용)
   const empType: "ALL" | "PERMANENT" | "DAILY" =
     employmentFilter === "ALL" ? "ALL" : employmentFilter === "REGULAR" ? "PERMANENT" : "DAILY";
 
@@ -67,10 +67,23 @@ export default function ManagerSafetyEducationSelectPage() {
 
   const employees = useMemo(() => employeesData?.items ?? [], [employeesData?.items]);
 
-  // 선택된 근로자 통계
+  // 전체 근로자 목록 조회 (통계 계산용 - 필터와 관계없이 모든 선택된 근로자 통계 표시)
+  const { data: allEmployeesData } = useSafetyEducationLogEmployees(
+    {
+      siteId: parsedSiteId,
+      empType: "ALL",
+    },
+    {
+      enabled: hasValidSiteId,
+    },
+  );
+
+  const allEmployees = useMemo(() => allEmployeesData?.items ?? [], [allEmployeesData?.items]);
+
+  // 선택된 근로자 통계 (전체 근로자 목록 기준으로 계산)
   const selectedEmployees = useMemo(() => {
-    return employees.filter((emp) => selectedEmployeeIds.has(emp.employeeId));
-  }, [employees, selectedEmployeeIds]);
+    return allEmployees.filter((emp) => selectedEmployeeIds.has(emp.employeeId));
+  }, [allEmployees, selectedEmployeeIds]);
 
   const selectedCount = selectedEmployees.length;
   const selectedRegularCount = selectedEmployees.filter(
