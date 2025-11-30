@@ -320,6 +320,16 @@ export default function ManagerSafetyEducationSignPage() {
       return;
     }
 
+    // 참석자가 없는 경우 체크 (every()는 빈 배열에 대해 true를 반환하므로)
+    if (attendeesData.attendees.length === 0) {
+      notification.error({
+        message:
+          "교육 대상자가 선택되지 않았습니다. 이전 단계로 돌아가서 교육 대상자를 선택해주세요.",
+        placement: "topRight",
+      });
+      return;
+    }
+
     // 모든 근로자가 서명 완료되었는지 확인
     const allSigned = attendeesData.attendees.every((attendee) => attendee.isSigned);
     if (!allSigned) {
