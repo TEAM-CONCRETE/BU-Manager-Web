@@ -62,18 +62,8 @@ export default function ManagerSafetyEducationSignPage() {
     }
   }, [logItem?.status]);
 
-  // Query params에서 교육 정보 및 선택된 근로자 가져오기
+  // 세션 스토리지에서 교육 정보 및 선택된 근로자 가져오기 (긴 텍스트를 URL에 포함하지 않기 위해)
   const educationData = useMemo(() => {
-    const selectedEmployeeIdsJson = searchParams.get("selectedEmployeeIds");
-    let selectedEmployeeIds: number[] = [];
-    if (selectedEmployeeIdsJson) {
-      try {
-        selectedEmployeeIds = JSON.parse(selectedEmployeeIdsJson);
-      } catch (e) {
-        console.error("Failed to parse selectedEmployeeIds", e);
-      }
-    }
-
     // logId가 있고 목록에서 정보를 찾았으면 그것을 우선 사용
     if (logItem) {
       return {
@@ -84,11 +74,41 @@ export default function ManagerSafetyEducationSignPage() {
         educationContent: "", // 목록 API에는 없음
         instructorName: logItem.instructorName,
         educationLocation: "", // 목록 API에는 없음
-        selectedEmployeeIds, // 참석자 정보는 attendees API에서 가져옴
+        selectedEmployeeIds: [], // 참석자 정보는 attendees API에서 가져옴
       };
     }
 
-    // 그 외에는 쿼리 파라미터에서 가져오기
+    // 세션 스토리지에서 가져오기
+    const storedData = sessionStorage.getItem("safety-education-form-data");
+    if (storedData) {
+      try {
+        const parsed = JSON.parse(storedData);
+        return {
+          siteName: parsed.siteName ?? "",
+          siteAddress: parsed.siteAddress ?? "",
+          educationType: parsed.educationType ?? "",
+          educationSubject: parsed.educationSubject ?? "",
+          educationContent: parsed.educationContent ?? "",
+          instructorName: parsed.instructorName ?? "",
+          educationLocation: parsed.educationLocation ?? "",
+          selectedEmployeeIds: parsed.selectedEmployeeIds ?? [],
+        };
+      } catch (e) {
+        console.error("Failed to parse education data from sessionStorage", e);
+      }
+    }
+
+    // 폴백: 쿼리 파라미터에서 가져오기 (하위 호환성)
+    const selectedEmployeeIdsJson = searchParams.get("selectedEmployeeIds");
+    let selectedEmployeeIds: number[] = [];
+    if (selectedEmployeeIdsJson) {
+      try {
+        selectedEmployeeIds = JSON.parse(selectedEmployeeIdsJson);
+      } catch (e) {
+        console.error("Failed to parse selectedEmployeeIds", e);
+      }
+    }
+
     return {
       siteName: searchParams.get("siteName") ?? "",
       siteAddress: searchParams.get("siteAddress") ?? "",
@@ -291,6 +311,8 @@ export default function ManagerSafetyEducationSignPage() {
     }
 
     // 모든 서명이 완료되었으면 목록 페이지로 이동
+    // 세션 스토리지 정리
+    sessionStorage.removeItem("safety-education-form-data");
     router.push("/manager/safety-education?created=true");
   };
 

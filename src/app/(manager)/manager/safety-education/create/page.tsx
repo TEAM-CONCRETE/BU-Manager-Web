@@ -40,6 +40,8 @@ export default function ManagerSafetyEducationCreatePage() {
   const [educationLocation, setEducationLocation] = useState("");
 
   const handleCancel = () => {
+    // 세션 스토리지 정리
+    sessionStorage.removeItem("safety-education-form-data");
     router.back();
   };
 
@@ -72,8 +74,8 @@ export default function ManagerSafetyEducationCreatePage() {
       return;
     }
 
-    // 다음 단계로 이동 (교육 정보를 query params로 전달)
-    const params = new URLSearchParams({
+    // 교육 정보를 세션 스토리지에 저장 (긴 텍스트를 URL에 포함하지 않기 위해)
+    const educationData = {
       siteName: basicInfo.siteName,
       siteAddress: basicInfo.siteAddress,
       educationType,
@@ -81,6 +83,13 @@ export default function ManagerSafetyEducationCreatePage() {
       educationContent,
       instructorName,
       educationLocation,
+    };
+    sessionStorage.setItem("safety-education-form-data", JSON.stringify(educationData));
+
+    // 다음 단계로 이동 (짧은 정보만 query params로 전달)
+    const params = new URLSearchParams({
+      educationType,
+      educationSubject,
     });
 
     router.push(`/manager/safety-education/create/select?${params.toString()}`);

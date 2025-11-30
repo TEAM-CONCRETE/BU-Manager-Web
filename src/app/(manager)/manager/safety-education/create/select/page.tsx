@@ -23,8 +23,17 @@ export default function ManagerSafetyEducationSelectPage() {
 
   const { data: siteDetail } = useSiteDetail(parsedSiteId);
 
-  // Query params에서 교육 정보 가져오기
+  // 세션 스토리지에서 교육 정보 가져오기 (긴 텍스트를 URL에 포함하지 않기 위해)
   const educationData = useMemo(() => {
+    const storedData = sessionStorage.getItem("safety-education-form-data");
+    if (storedData) {
+      try {
+        return JSON.parse(storedData);
+      } catch (e) {
+        console.error("Failed to parse education data from sessionStorage", e);
+      }
+    }
+    // 폴백: 쿼리 파라미터에서 가져오기 (하위 호환성)
     return {
       siteName: searchParams.get("siteName") ?? "",
       siteAddress: searchParams.get("siteAddress") ?? "",
@@ -74,6 +83,7 @@ export default function ManagerSafetyEducationSelectPage() {
   };
 
   const handleBack = () => {
+    // 세션 스토리지는 유지 (뒤로 가기 시 데이터 보존)
     router.back();
   };
 
@@ -87,14 +97,19 @@ export default function ManagerSafetyEducationSelectPage() {
       return;
     }
 
-    // 선택된 근로자 ID 배열을 query params로 전달
+    // 선택된 근로자 ID 배열을 세션 스토리지에 추가
     const selectedEmployeeIdsArray = Array.from(selectedEmployeeIds);
+    const updatedEducationData = {
+      ...educationData,
+      selectedEmployeeIds: selectedEmployeeIdsArray,
+    };
+    sessionStorage.setItem("safety-education-form-data", JSON.stringify(updatedEducationData));
 
-    const params = new URLSearchParams();
-    Object.entries(educationData).forEach(([key, value]) => {
-      params.set(key, value);
+    // 다음 단계로 이동 (짧은 정보만 query params로 전달)
+    const params = new URLSearchParams({
+      educationType: educationData.educationType,
+      educationSubject: educationData.educationSubject,
     });
-    params.set("selectedEmployeeIds", JSON.stringify(selectedEmployeeIdsArray));
 
     router.push(`/manager/safety-education/create/sign?${params.toString()}`);
   };
