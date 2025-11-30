@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal, Pagination, Spin } from "antd";
 
 import { Table } from "@/components/ui/Table/table";
@@ -144,6 +144,13 @@ export function PayrollDetailModal({ open, onClose, payrollId }: PayrollDetailMo
   const pageSize = 10;
 
   const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+
+  // payrollId가 변경되거나 모달이 열릴 때 페이지를 0으로 리셋
+  useEffect(() => {
+    if (open) {
+      setPage(0);
+    }
+  }, [open, payrollId]);
 
   const { data, isLoading, isFetching, isError, error } = usePayrollDetail({
     payrollId: payrollId ?? 0,
