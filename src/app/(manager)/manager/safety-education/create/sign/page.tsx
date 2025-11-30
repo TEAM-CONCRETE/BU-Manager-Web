@@ -204,7 +204,11 @@ export default function ManagerSafetyEducationSignPage() {
   const pdfUrl = initialPdfUrl || fetchedPdfUrl;
 
   // 참석자 서명 현황 조회
-  const { data: attendeesData } = useSafetyEducationLogAttendees(parsedSiteId, logId, {
+  const {
+    data: attendeesData,
+    isLoading: isAttendeesLoading,
+    isError: isAttendeesError,
+  } = useSafetyEducationLogAttendees(parsedSiteId, logId, {
     enabled: logId != null && hasValidSiteId,
   });
 
@@ -298,16 +302,32 @@ export default function ManagerSafetyEducationSignPage() {
       return;
     }
 
+    // 참석자 데이터가 로딩 중이면 대기
+    if (isAttendeesLoading) {
+      notification.info({
+        message: "참석자 서명 현황을 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    // 참석자 데이터가 없거나 에러가 발생한 경우
+    if (!attendeesData || isAttendeesError) {
+      notification.error({
+        message: "참석자 서명 현황을 불러올 수 없습니다. 페이지를 새로고침한 후 다시 시도해주세요.",
+        placement: "topRight",
+      });
+      return;
+    }
+
     // 모든 근로자가 서명 완료되었는지 확인
-    if (attendeesData) {
-      const allSigned = attendeesData.attendees.every((attendee) => attendee.isSigned);
-      if (!allSigned) {
-        notification.warning({
-          message: "모든 교육 대상자의 서명이 완료되어야 합니다.",
-          placement: "topRight",
-        });
-        return;
-      }
+    const allSigned = attendeesData.attendees.every((attendee) => attendee.isSigned);
+    if (!allSigned) {
+      notification.warning({
+        message: "모든 교육 대상자의 서명이 완료되어야 합니다.",
+        placement: "topRight",
+      });
+      return;
     }
 
     // 모든 서명이 완료되었으면 목록 페이지로 이동
@@ -531,7 +551,12 @@ export default function ManagerSafetyEducationSignPage() {
 
       {/* 하단 액션 버튼 */}
       <section className="flex justify-end">
-        <Button variant="primary" size="md" onClick={handleConfirm}>
+        <Button
+          variant="primary"
+          size="md"
+          onClick={handleConfirm}
+          disabled={isAttendeesLoading || !attendeesData}
+        >
           확인
         </Button>
       </section>
