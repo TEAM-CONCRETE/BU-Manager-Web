@@ -24,6 +24,7 @@ export function ManagerContractCreateTypeModal({
       footer={null}
       centered
       width={520}
+      zIndex={2000}
       classNames={{
         content: "bg-white",
         body: "p-6",
