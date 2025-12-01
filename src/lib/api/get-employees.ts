@@ -120,13 +120,16 @@ export async function getEmployeeList(
     queryParams.set("name", params.searchKeyword);
   }
 
-  const response = await fetch(`/api/sites/${params.siteId}/employees?${queryParams.toString()}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
+  const response = await fetch(
+    `/api/v1/sites/${params.siteId}/employees?${queryParams.toString()}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
     },
-    credentials: "include",
-  });
+  );
 
   if (!response.ok) {
     throw new Error("사원 목록을 불러오는 중 오류가 발생했습니다.");
@@ -168,7 +171,7 @@ export async function getEmployeeDetail({
   siteId,
   employeeId,
 }: GetEmployeeDetailParams): Promise<EmployeeDetail> {
-  const response = await fetch(`/api/sites/${siteId}/employees/${employeeId}`, {
+  const response = await fetch(`/api/v1/sites/${siteId}/employees/${employeeId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -208,7 +211,7 @@ export async function getEmployeeContracts({
   siteId,
   employeeId,
 }: GetEmployeeContractsParams): Promise<GetEmployeeContractsResponse> {
-  const response = await fetch(`/api/sites/${siteId}/employees/${employeeId}/contracts`, {
+  const response = await fetch(`/api/v1/sites/${siteId}/employees/${employeeId}/contracts`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -246,7 +249,7 @@ export async function getEmployeePayslips({
   siteId,
   employeeId,
 }: GetEmployeePayslipsParams): Promise<GetEmployeePayslipsResponse> {
-  const response = await fetch(`/api/sites/${siteId}/employees/${employeeId}/payslips`, {
+  const response = await fetch(`/api/v1/sites/${siteId}/employees/${employeeId}/payslips`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -281,7 +284,7 @@ export async function getEmployeePayslips({
 }
 
 export async function getContractPdfUrl(contractId: number): Promise<string> {
-  const response = await fetch(`/api/documents/contracts/${contractId}`, {
+  const response = await fetch(`/api/v1/documents/contracts/${contractId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -303,7 +306,7 @@ export async function getContractPdfUrl(contractId: number): Promise<string> {
 }
 
 export async function getPayslipPdfUrl(payrollId: number): Promise<string> {
-  const response = await fetch(`/api/documents/payslips/${payrollId}`, {
+  const response = await fetch(`/api/v1/documents/payslips/${payrollId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

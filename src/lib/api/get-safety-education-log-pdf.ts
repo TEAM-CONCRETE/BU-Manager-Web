@@ -8,7 +8,7 @@ export type GetSafetyEducationLogPdfApiResponse = {
 };
 
 export async function getSafetyEducationLogPdfUrl(siteId: number, logId: number): Promise<string> {
-  const response = await fetch(`/api/documents/safety-education-logs/${logId}`, {
+  const response = await fetch(`/api/v1/documents/safety-education-logs/${logId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
