@@ -148,6 +148,10 @@ export default function ManagerContractsPage() {
   const lastErrorMessageRef = useRef<string | null>(null);
 
   useEffect(() => {
+    console.log("createTarget changed", createTarget);
+  }, [createTarget]);
+
+  useEffect(() => {
     if (!isError && !error) {
       lastErrorMessageRef.current = null;
       return;
@@ -340,7 +344,10 @@ export default function ManagerContractsPage() {
               total={totalRecords}
               onPageChange={(newPage) => setPage(newPage)}
               onOpenContract={(contractId) => setSelectedContractId(contractId)}
-              onCreateContract={(record) => setCreateTarget(record)}
+              onCreateContract={(record) => {
+                console.log("create click", record);
+                setCreateTarget(record);
+              }}
             />
           </>
         )}
